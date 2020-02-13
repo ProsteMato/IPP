@@ -11,7 +11,7 @@
             "CALL" => [Types::LABEL],
             "RETURN" => [],
             "PUSHS" => [Types::SYMBOL],
-            "POPS" => [Types::VAR],
+            "POPS" => [Types::VARIABLE],
             "ADD" => [Types::VARIABLE, Types::SYMBOL, Types::SYMBOL],
             "SUB" => [Types::VARIABLE, Types::SYMBOL, Types::SYMBOL],
             "MUL" => [Types::VARIABLE, Types::SYMBOL, Types::SYMBOL],
@@ -60,8 +60,19 @@
 
     class Regex
     {
+        private const STRING = "string@([^#\\]|(\\d{3}))*";
+        private const INT = "int@(\+|\-)?\d+";
+        private const BOOL = "bool@(true|false)";
+        private const NIL = "nil@nil";
+        private const CONST = "(" . self::STRING . "|" . self::INT . "|" . self::BOOL . "|" . self::NIL . ")";
+        private const SPECIAL_CHAR = "_-$&%*!?";
+        private const IDENTIFIER = "[[:alpha:]" . self::SPECIAL_CHAR . "][[:alnum:]" . self::SPECIAL_CHAR . "]*";
         const COMMENT = "(#[^\n]*)";
         const DELIMITER = "[\s\t]";
+        const TYPE = "(int|bool|string)";
+        const VARIABLE = "(GF|LF|TF)@" . self::IDENTIFIER;
+        const LABEL = self::IDENTIFIER;
+        const SYMBOL = "(". self::CONST . "|" . self::VARIABLE . ")";
     }
 
     class FileManager
@@ -86,29 +97,69 @@
 
     class Parser
     {
-        private $lexicalChecker;
-        private $syntaxChecker;
-        private $instruction;
-        private $xmlGenerator;
-        private $fileManager;
+        private LexicalChecker $lexicalChecker;
+        private SyntaxChecker $syntaxChecker;
+        private Instruction $instruction;
+        private XmlGenerator $xmlGenerator;
+        private FileManager $fileManager;
 
-        public function __construct($lexicalChecker, $syntaxChecker, $xmlGenerator, $fileManager)
+        public function __construct(LexicalChecker $lexicalChecker, SyntaxChecker $syntaxChecker, XmlGenerator $xmlGenerator, FileManager $fileManager, Instruction $instruction)
         {
             $this->lexicalChecker = $lexicalChecker;
             $this->syntaxChecker = $syntaxChecker;
             $this->xmlGenerator = $xmlGenerator;
             $this->fileManager = $fileManager;
+            $this->instruction = $instruction;
         }
 
         public function parse()
         {
             $token = $this->lexicalChecker->getNextToken();
-            if(!$this->syntaxChecker->checkFirstToken($token)) {
-                throw new Exception("Bad Header", Errors::HEADER_ERR);
+
+            if(!$this->syntaxChecker->checkFirstToken($token))
+            {
+                throw new Exception("Bad Header!", Errors::HEADER_ERR);
             }
+
             while(!feof($this->fileManager->getFile()))
             {
                 $token = $this->lexicalChecker->getNextToken();
+                if (feof($this->fileManager->getFile()))
+                {
+                    break;
+                }
+                if(!$this->lexicalChecker->checkOpCode($token[0]))
+                {
+                    throw new Exception("OpCode does not exist!", Errors::INSTRUCTION_ERR);
+                }
+                if(!$this->syntaxChecker->checkNumOfParameters($token[0], count(array_slice($token, 1))))
+                {
+                    throw new Exception("Bad number of parameters!", Errors::LEX_OR_SYNTAX_ERR);
+                }
+                $this->argParse(array_slice($token, 1), Instructions::INSTRUCTIONS[$token[0]]);
+            }
+        }
+
+        private function argParse($arguments, $requiredArguments)
+        {
+
+            foreach ($arguments as $arg)
+            {
+                switch ($arg)
+                {
+                    case Types::VARIABLE:
+                        echo "d";
+                        break;
+                    case Types::LABEL:
+                        echo "a";
+                        break;
+                    case Types::SYMBOL:
+                        echo "b";
+                        break;
+                    case Types::TYPE:
+                        echo "c";
+                        break;
+                }
             }
         }
     }
@@ -198,9 +249,9 @@
 
     class LexicalChecker
     {
-        private $fileManager;
+        private FileManager $fileManager;
 
-        public function __construct($fileManager)
+        public function __construct(FileManager $fileManager)
         {
             $this->fileManager = $fileManager;
         }
@@ -223,6 +274,7 @@
         }
 
         public function checkOpCode($opCode) {
+            $opCode = mb_strtoupper($opCode);
             return array_key_exists($opCode, Instructions::INSTRUCTIONS);
         }
     }
@@ -240,7 +292,8 @@
     $lexicalChecker = new LexicalChecker($fileManager);
     $syntaxChecker = new SyntaxChecker();
     $xmlGenerator = new XmlGenerator();
-    $parser = new Parser($lexicalChecker, $syntaxChecker, $xmlGenerator, $fileManager);
+    $instruction = new Instruction();
+    $parser = new Parser($lexicalChecker, $syntaxChecker, $xmlGenerator, $fileManager, $instruction);
     try {
         $parser->parse();
     } catch (Exception $e) {
