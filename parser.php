@@ -60,12 +60,12 @@
 
     class Regex
     {
-        private const STRING = "string@([^#\\]|(\\d{3}))*";
+        private const STRING = "string@(([^\\\#]|\\\\\d{3})+|$)";
         private const INT = "int@(\+|\-)?\d+";
         private const BOOL = "bool@(true|false)";
         private const NIL = "nil@nil";
-        private const CONST = "(" . self::STRING . "|" . self::INT . "|" . self::BOOL . "|" . self::NIL . ")";
-        private const SPECIAL_CHAR = "_-$&%*!?";
+        private const CONST = self::STRING . "|" . self::INT . "|" . self::BOOL . "|" . self::NIL;
+        private const SPECIAL_CHAR = "_$&%*!?-";
         private const IDENTIFIER = "[[:alpha:]" . self::SPECIAL_CHAR . "][[:alnum:]" . self::SPECIAL_CHAR . "]*";
         const COMMENT = "(#[^\n]*)";
         const DELIMITER = "[\s\t]";
@@ -102,6 +102,7 @@
         private Instruction $instruction;
         private XmlGenerator $xmlGenerator;
         private FileManager $fileManager;
+        private int $order;
 
         public function __construct(LexicalChecker $lexicalChecker, SyntaxChecker $syntaxChecker, XmlGenerator $xmlGenerator, FileManager $fileManager, Instruction $instruction)
         {
@@ -110,55 +111,52 @@
             $this->xmlGenerator = $xmlGenerator;
             $this->fileManager = $fileManager;
             $this->instruction = $instruction;
+            $this->order = 1;
         }
 
         public function parse()
         {
             $token = $this->lexicalChecker->getNextToken();
+            try {
+                $this->syntaxChecker->checkFirstToken($token);
+                while (!feof($this->fileManager->getFile())) {
+                    $token = $this->lexicalChecker->getNextToken();
+                    if (feof($this->fileManager->getFile())) {
+                        break;
+                    }
+                    $this->lexicalChecker->checkOpCode($token[0]);
+                    $this->syntaxChecker->checkNumOfParameters($token[0], count(array_slice($token, 1)));
 
-            if(!$this->syntaxChecker->checkFirstToken($token))
-            {
-                throw new Exception("Bad Header!", Errors::HEADER_ERR);
-            }
-
-            while(!feof($this->fileManager->getFile()))
-            {
-                $token = $this->lexicalChecker->getNextToken();
-                if (feof($this->fileManager->getFile()))
-                {
-                    break;
+                    $this->argParse(array_slice($token, 1), Instructions::INSTRUCTIONS[$token[0]]);
                 }
-                if(!$this->lexicalChecker->checkOpCode($token[0]))
-                {
-                    throw new Exception("OpCode does not exist!", Errors::INSTRUCTION_ERR);
-                }
-                if(!$this->syntaxChecker->checkNumOfParameters($token[0], count(array_slice($token, 1))))
-                {
-                    throw new Exception("Bad number of parameters!", Errors::LEX_OR_SYNTAX_ERR);
-                }
-                $this->argParse(array_slice($token, 1), Instructions::INSTRUCTIONS[$token[0]]);
+            } catch (Exception $e) {
+                throw $e;
             }
         }
 
         private function argParse($arguments, $requiredArguments)
         {
-
-            foreach ($arguments as $arg)
+            print_r($arguments);
+            for ($i = 0; $i < count($requiredArguments); $i++)
             {
-                switch ($arg)
-                {
-                    case Types::VARIABLE:
-                        echo "d";
-                        break;
-                    case Types::LABEL:
-                        echo "a";
-                        break;
-                    case Types::SYMBOL:
-                        echo "b";
-                        break;
-                    case Types::TYPE:
-                        echo "c";
-                        break;
+                try {
+                    switch ($requiredArguments[$i])
+                    {
+                        case Types::VARIABLE:
+                            $this->lexicalChecker->isVariable($arguments[$i]);
+                            break;
+                        case Types::LABEL:
+                            $this->lexicalChecker->isLabel($arguments[$i]);
+                            break;
+                        case Types::SYMBOL:
+                            $this->lexicalChecker->isSymbol($arguments[$i]);
+                            break;
+                        case Types::TYPE:
+                            $this->lexicalChecker->isType($arguments[$i]);
+                            break;
+                    }
+                } catch (Exception $e) {
+                    throw $e;
                 }
             }
         }
@@ -166,13 +164,9 @@
 
     class Instruction
     {
-        private $opCode;
-        private $order;
-        private $arguments;
-
-        public function __construct()
-        {
-        }
+        private string $opCode;
+        private string $order;
+        private string $arguments;
 
         public function getOrder()
         {
@@ -192,12 +186,8 @@
 
     class Arguments
     {
-        private $type;
-        private $content;
-
-        public function __construct()
-        {
-        }
+        private string $type;
+        private string $content;
 
         public function getType()
         {
@@ -220,16 +210,16 @@
         }
     }
 
-    interface IGenerator
+    class XmlGenerator
     {
-        public function generate();
-    }
-
-    class XmlGenerator implements IGenerator
-    {
-        public function generate()
+        public function generateInstruction()
         {
-            // TODO: Implement generate() method.
+
+        }
+
+        public function generateHeader()
+        {
+
         }
     }
 
@@ -237,13 +227,15 @@
     {
         public function checkNumOfParameters($opCode, $numberOfParameters)
         {
-            return count(Instructions::INSTRUCTIONS[$opCode]) == $numberOfParameters;
+            if(count(Instructions::INSTRUCTIONS[$opCode]) != $numberOfParameters)
+                throw new Exception("Bad argument count in instruction!", Errors::BAD_ARGUMENT);
         }
 
         public function checkFirstToken($token)
         {
             $token = mb_strtolower($token[0]);
-            return strcmp(".ippcode20", $token) == 0;
+            if(!strcmp(".ippcode20", $token) == 0)
+                throw new Exception("Bad header content!", Errors::HEADER_ERR);
         }
     }
 
@@ -273,19 +265,90 @@
             }
         }
 
-        public function checkOpCode($opCode) {
+        public function checkOpCode($opCode)
+        {
             $opCode = mb_strtoupper($opCode);
-            return array_key_exists($opCode, Instructions::INSTRUCTIONS);
+            if(!array_key_exists($opCode, Instructions::INSTRUCTIONS))
+                throw new Exception("Undefined opCode", Errors::INSTRUCTION_ERR);
+        }
+
+        public function isVariable($variable)
+        {
+            if(!preg_match("/^" . Regex::VARIABLE . "/", $variable))
+                throw new Exception("Variable argument is not valid!", Errors::LEX_OR_SYNTAX_ERR);
+        }
+
+        public function isSymbol($symbol)
+        {
+            if(!preg_match("/^" . Regex::SYMBOL . "/", $symbol))
+                throw new Exception("Symbol argument is not valid!", Errors::LEX_OR_SYNTAX_ERR);
+        }
+
+        public function isLabel($label)
+        {
+            if(!preg_match("/^" . Regex::LABEL . "/", $label))
+                throw new Exception("Label argument is not valid!", Errors::LEX_OR_SYNTAX_ERR);
+        }
+
+        public function isType($type)
+        {
+            if(!preg_match("/^" . Regex::TYPE . "/", $type))
+                throw new Exception("Type argument is not valid!", Errors::LEX_OR_SYNTAX_ERR);
         }
     }
 
     class Stats
     {
-        private $loc;
-        private $comments;
-        private $labels;
-        private $jumps;
-        private $file;
+        private int $loc;
+        private int $comments;
+        private int $labels;
+        private int $jumps;
+        private int $file;
+
+        public function setFile($file) {
+            $this->file = $file;
+        }
+
+        public function incLoc() {
+            $this->loc++;
+        }
+
+        public function incComments() {
+            $this->comments++;
+        }
+
+        public function incLabels() {
+            $this->labels++;
+        }
+
+        public function incJumps() {
+            $this->jumps++;
+        }
+
+        public function getLoc(): int
+        {
+            return $this->loc;
+        }
+
+        public function getComments(): int
+        {
+            return $this->comments;
+        }
+
+        public function getLabels(): int
+        {
+            return $this->labels;
+        }
+
+        public function getJumps(): int
+        {
+            return $this->jumps;
+        }
+
+        public function getFile(): int
+        {
+            return $this->file;
+        }
     }
 
     $fileManager = new FileManager(STDIN);
