@@ -84,14 +84,27 @@
             $this->file = $file;
         }
 
-        public function getFile()
-        {
-            return $this->file;
-        }
-
-        public function getLine()
+        private function getLine()
         {
             return fgets($this->file);
+        }
+
+        public function getNextToken()
+        {
+            while(!feof($this->file)) {
+                $line = $this->getLine();
+                $token = preg_split("/". Regex::DELIMITER . "|" . Regex::COMMENT . "/", $line, 0,
+                    PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
+
+                if(count($token) > 0 && preg_match("/^". Regex::COMMENT ."/",$token[array_key_last($token)])) {
+                    unset($token[array_key_last($token)]);
+                }
+
+                if(count($token) > 0) {
+                    return $token;
+                }
+            }
+            return null;
         }
     }
 
@@ -99,60 +112,34 @@
     {
         private Analysis $analysis;
         private Instruction $instruction;
+        private FileManager $fileManager;
         private XmlGenerator $xmlGenerator;
         private int $order;
 
-        public function __construct(Analysis $analysis, XmlGenerator $xmlGenerator, Instruction $instruction)
+        public function __construct(Analysis $analysis, XmlGenerator $xmlGenerator, FileManager $fileManager, Instruction $instruction)
         {
             $this->analysis = $analysis;
             $this->xmlGenerator = $xmlGenerator;
+            $this->fileManager = $fileManager;
             $this->instruction = $instruction;
             $this->order = 1;
         }
 
         public function parse()
         {
-            $token = $this->analysis->getNextToken();
+            $token = $this->fileManager->getNextToken();
             $this->analysis->isHeader($token);
-            $token = $this->analysis->getNextToken();
+            $this->xmlGenerator->generateHeader();
+            $token = $this->fileManager->getNextToken();
             while (!$this->analysis->isEndingToken($token)) {
-                $this->analysis->isOpCode($token[0]);
-                $this->analysis->checkNumOfParameters($token[0], count(array_slice($token, 1)));
-
-                $this->argParse(array_slice($token, 1), Instructions::INSTRUCTIONS[$token[0]]);
+                $arguments = $this->analysis->argParser($token);
                 $this->instruction->setOpCode($token[0]);
-                $token = $this->analysis->getNextToken();
+                $this->instruction->setArguments($arguments);
+                $this->xmlGenerator->generateInstruction($this->instruction, $this->order);
+                $token = $this->fileManager->getNextToken();
+                $this->order++;
             }
-        }
-
-        private function argParse($givenArguments, $requiredArguments)
-        {
-            for ($index = 0; $index < count($requiredArguments); $index++)
-            {
-                switch ($requiredArguments[$index])
-                {
-                    case Types::VARIABLE:
-                        if (!$this->analysis->isVariable($givenArguments[$index]))
-                            throw new Exception("Variable is not valid!", Errors::LEX_OR_SYNTAX_ERR);
-                        $this->instruction->setArguments($requiredArguments[$index], $givenArguments[$index], $this->analysis);
-                        break;
-                    case Types::LABEL:
-                        if (!$this->analysis->isLabel($givenArguments[$index]))
-                            throw new Exception("Label is not valid!", Errors::LEX_OR_SYNTAX_ERR);
-                        $this->instruction->setArguments($requiredArguments[$index], $givenArguments[$index], $this->analysis);
-                        break;
-                    case Types::SYMBOL:
-                        if (!$this->analysis->isSymbol($givenArguments[$index]))
-                            throw new Exception("Symbol is not valid!", Errors::LEX_OR_SYNTAX_ERR);
-                        $this->instruction->setArguments($requiredArguments[$index], $givenArguments[$index], $this->analysis);
-                        break;
-                    case Types::TYPE:
-                        if (!$this->analysis->isType($givenArguments[$index]))
-                            throw new Exception("Type is not valid!", Errors::LEX_OR_SYNTAX_ERR);
-                        $this->instruction->setArguments($requiredArguments[$index], $givenArguments[$index], $this->analysis);
-                        break;
-                }
-            }
+            $this->xmlGenerator->generate();
         }
     }
 
@@ -182,27 +169,8 @@
             $this->opCode = $opCode;
         }
 
-        public function setArguments($type, string $givenArgument, Analysis $analysis) {
-            switch($type)
-            {
-                case Types::VARIABLE:
-                    array_push($this->arguments, new Arguments("var", $givenArgument));
-                    break;
-                case Types::LABEL:
-                    array_push($this->arguments, new Arguments("label", $givenArgument));
-                    break;
-                case Types::SYMBOL:
-                    if($analysis->isVariable($givenArgument)) {
-                        array_push($this->arguments, new Arguments("var", $givenArgument));
-                    } else {
-                        $splitArgument = preg_split("/[@]/", $givenArgument, 2);
-                        array_push($this->arguments, new Arguments($splitArgument[0], $splitArgument[1]));
-                    }
-                    break;
-                case Types::TYPE:
-                    array_push($this->arguments, new Arguments("type", $givenArgument));
-                    break;
-            }
+        public function setArguments($arguments) {
+            $this->arguments = $arguments;
         }
     }
 
@@ -230,45 +198,49 @@
 
     class XmlGenerator
     {
-        public function generateInstruction($instruction)
-        {
+        private XMLWriter $xmlWriter;
 
+        public function __construct()
+        {
+            $this->xmlWriter = new XMLWriter();
+        }
+
+        public function generateInstruction(Instruction $instruction, int $order)
+        {
+            $arguments = $instruction->getArguments();
+            $this->xmlWriter->startElement("instruction");
+            $this->xmlWriter->writeAttribute("order", $order);
+            $this->xmlWriter->writeAttribute("opcode", $instruction->getOpCode());
+            for($i = 1; $i <= count($arguments); $i++) {
+                $this->xmlWriter->startElement("arg" . $i);
+                $this->xmlWriter->writeAttribute("type", $arguments[$i - 1]->getType());
+                $content = htmlspecialchars($arguments[$i - 1]->getContent(), ENT_XML1 | ENT_QUOTES, "UTF-8");
+                $this->xmlWriter->writeRaw($content);
+                $this->xmlWriter->endElement();
+            }
+            $this->xmlWriter->endElement();
+        }
+
+        public function generate(){
+            $this->xmlWriter->endElement();
+            $this->xmlWriter->endDocument();
+            echo $this->xmlWriter->outputMemory(true);
         }
 
         public function generateHeader()
         {
-
+            $this->xmlWriter->openMemory();
+            $this->xmlWriter->setIndent(true);
+            $this->xmlWriter->setIndentString("    ");
+            $this->xmlWriter->startDocument("1.0", "UTF-8");
+            $this->xmlWriter->startElement("program");
+            $this->xmlWriter->writeAttribute("language", "IPPcode20");
         }
     }
 
     class Analysis
     {
-        private FileManager $fileManager;
-
-        public function __construct(FileManager $fileManager)
-        {
-            $this->fileManager = $fileManager;
-        }
-
-        public function getNextToken()
-        {
-            while(!feof($this->fileManager->getFile())) {
-                $line = $this->fileManager->getLine();
-                $token = preg_split("/". Regex::DELIMITER . "|" . Regex::COMMENT . "/", $line, 0,
-                    PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
-
-                if(count($token) > 0 && preg_match("/^". Regex::COMMENT ."/",$token[array_key_last($token)])) {
-                    unset($token[array_key_last($token)]);
-                }
-
-                if(count($token) > 0) {
-                    return $token;
-                }
-            }
-            return null;
-        }
-
-        public function checkNumOfParameters($opCode, $numberOfParameters)
+        private function checkNumOfParameters($opCode, $numberOfParameters)
         {
             if(count(Instructions::INSTRUCTIONS[$opCode]) != $numberOfParameters)
                 throw new Exception("Bad argument count in instruction!", Errors::BAD_ARGUMENT);
@@ -277,33 +249,33 @@
         public function isHeader($token)
         {
             $token = mb_strtolower($token[0]);
-            if(!strcmp(".ippcode20", $token) == 0)
+            if(strcmp(".ippcode20", $token) != 0)
                 throw new Exception("Bad header content!", Errors::HEADER_ERR);
         }
 
-        public function isOpCode($opCode)
+        private function isOpCode($opCode)
         {
             $opCode = mb_strtoupper($opCode);
             if(!array_key_exists($opCode, Instructions::INSTRUCTIONS))
                 throw new Exception("Undefined opCode!", Errors::INSTRUCTION_ERR);
         }
 
-        public function isVariable($variable)
+        private function isVariable($variable)
         {
             return preg_match("/^" . Regex::VARIABLE . "/", $variable);
         }
 
-        public function isSymbol($symbol)
+        private function isSymbol($symbol)
         {
             return preg_match("/^" . Regex::SYMBOL . "/", $symbol);
         }
 
-        public function isLabel($label)
+        private function isLabel($label)
         {
             return preg_match("/^" . Regex::LABEL . "/", $label);
         }
 
-        public function isType($type)
+        private function isType($type)
         {
             return preg_match("/^" . Regex::TYPE . "/", $type);
         }
@@ -311,6 +283,50 @@
         public function isEndingToken($token)
         {
             return $token == null;
+        }
+
+        public function argParser($token) : array
+        {
+            $this->isOpCode($token[0]);
+            $this->checkNumOfParameters($token[0], count(array_slice($token, 1)));
+            return $this->checkArguments(array_slice($token, 1), Instructions::INSTRUCTIONS[$token[0]]);
+        }
+
+        private function checkArguments($givenArguments, $requiredArguments)
+        {
+            $arguments = array();
+            for ($index = 0; $index < count($requiredArguments); $index++)
+            {
+                switch ($requiredArguments[$index])
+                {
+                    case Types::VARIABLE:
+                        if (!$this->isVariable($givenArguments[$index]))
+                            throw new Exception("Variable is not valid!", Errors::LEX_OR_SYNTAX_ERR);
+                        array_push($arguments, new Arguments("var", $givenArguments[$index]));
+                        break;
+                    case Types::LABEL:
+                        if (!$this->isLabel($givenArguments[$index]))
+                            throw new Exception("Label is not valid!", Errors::LEX_OR_SYNTAX_ERR);
+                        array_push($arguments, new Arguments("label", $givenArguments[$index]));
+                        break;
+                    case Types::SYMBOL:
+                        if (!$this->isSymbol($givenArguments[$index]))
+                            throw new Exception("Symbol is not valid!", Errors::LEX_OR_SYNTAX_ERR);
+                        if($this->isVariable($givenArguments[$index])) {
+                            array_push($arguments, new Arguments("var", $givenArguments[$index]));
+                        } else {
+                            $splitArgument = preg_split("/[@]/", $givenArguments[$index], 2);
+                            array_push($arguments, new Arguments($splitArgument[0], $splitArgument[1]));
+                        }
+                        break;
+                    case Types::TYPE:
+                        if (!$this->isType($givenArguments[$index]))
+                            throw new Exception("Type is not valid!", Errors::LEX_OR_SYNTAX_ERR);
+                        array_push($arguments, new Arguments("type", $givenArguments[$index]));
+                        break;
+                }
+            }
+            return $arguments;
         }
     }
 
@@ -369,16 +385,13 @@
     }
 
     $fileManager = new FileManager(STDIN);
-    $analysis = new Analysis($fileManager);
+    $analysis = new Analysis();
     $xmlGenerator = new XmlGenerator();
     $instruction = new Instruction();
-    $parser = new Parser($analysis, $xmlGenerator, $instruction);
+    $parser = new Parser($analysis, $xmlGenerator, $fileManager, $instruction);
     try {
         $parser->parse();
     } catch (Exception $e) {
         exit($e->getCode());
     }
-
-
-
 
