@@ -58,7 +58,7 @@
         const TYPE = 4;
     }
 
-    class Regex
+class Regex
     {
         private const STRING = "string@(([^\\\#]|\\\\\d{3})+|$)";
         private const INT = "int@(\+|\-)?\d+";
@@ -75,13 +75,80 @@
         const SYMBOL = "(". self::CONST . "|" . self::VARIABLE . ")";
     }
 
-    class FileManager
+class ArgvParser {
+        private array $parsedArguments;
+
+        public function __construct()
+        {
+            $this->parsedArguments = array();
+        }
+
+        public function parseArgv($argv, $argc)
+        {
+
+            for($index = 1; $index < $argc; $index++) {
+                $splitArg = preg_split("/=/", $argv[$index], 2);
+                $this->checkArgvAssignParam($splitArg);
+                switch ($splitArg[0]) {
+                    case "--help":
+                        array_push($this->parsedArguments, "help");
+                        break;
+                    case "--stats":
+                        if (array_key_exists("stats", $splitArg))
+                            throw new Exception("More than one output file for stats!", Errors::BAD_ARGUMENT);
+                        $this->parsedArguments["stats"] = $splitArg[1];
+                        break;
+                    case "--loc":
+                        array_push($this->parsedArguments, "loc");
+                        break;
+                    case "--comments":
+                        array_push($this->parsedArguments, "comments");
+                        break;
+                    case "--jumps":
+                        array_push($this->parsedArguments, "jumps");
+                        break;
+                    case "--labels":
+                        array_push($this->parsedArguments, "labels");
+                        break;
+                    default:
+                        throw new Exception("Undefined input argument", Errors::BAD_ARGUMENT);
+                        break;
+                }
+            }
+            if (!$this->checkCorrectionOfArgv($argc)) {
+                throw new Exception("Bad input argument", Errors::BAD_ARGUMENT);
+            }
+            return $this->parsedArguments;
+        }
+
+        private function checkArgvAssignParam($splitArg) {
+            if (array_key_exists(1, $splitArg) && $splitArg[0] != "--stats") {
+                throw new Exception("Assign not allowed!", Errors::BAD_ARGUMENT);
+            }
+            if (!array_key_exists(1, $splitArg) && $splitArg[0] == "--stats") {
+                throw new Exception("Missing Assign on stats argv!", Errors::BAD_ARGUMENT);
+            }
+        }
+
+        private function checkCorrectionOfArgv($argc)
+        {
+            if (in_array("help", $this->parsedArguments) && $argc != 2)
+                return false;
+            if (!array_key_exists("stats", $this->parsedArguments) && !in_array("help", $this->parsedArguments) && $argc != 1)
+                return false;
+            return true;
+        }
+}
+
+class FileManager
     {
         private $file;
+        private Stats $stats;
 
-        public function __construct($file)
+        public function __construct($file, Stats $stats)
         {
             $this->file = $file;
+            $this->stats = $stats;
         }
 
         private function getLine()
@@ -98,6 +165,7 @@
 
                 if(count($token) > 0 && preg_match("/^". Regex::COMMENT ."/",$token[array_key_last($token)])) {
                     unset($token[array_key_last($token)]);
+                    $this->stats->incComments();
                 }
 
                 if(count($token) > 0) {
@@ -113,15 +181,19 @@
         private Analysis $analysis;
         private Instruction $instruction;
         private FileManager $fileManager;
+        private Stats $stats;
         private XmlGenerator $xmlGenerator;
+        private array $labels;
         private int $order;
 
-        public function __construct(Analysis $analysis, XmlGenerator $xmlGenerator, FileManager $fileManager, Instruction $instruction)
+        public function __construct(Analysis $analysis, XmlGenerator $xmlGenerator, FileManager $fileManager, Instruction $instruction, Stats $stats)
         {
             $this->analysis = $analysis;
             $this->xmlGenerator = $xmlGenerator;
             $this->fileManager = $fileManager;
+            $this->stats = $stats;
             $this->instruction = $instruction;
+            $this->labels = array();
             $this->order = 1;
         }
 
@@ -133,14 +205,25 @@
             $token = $this->fileManager->getNextToken();
             while (!$this->analysis->isEndingToken($token)) {
                 $arguments = $this->analysis->argParser($token);
+                if (strcmp(mb_strtoupper($token[0]), "LABEL"))
+                    $this->checkUniqLabel($arguments[0]->getContent());
                 $this->instruction->setOpCode($token[0]);
                 $this->instruction->setArguments($arguments);
                 $this->xmlGenerator->generateInstruction($this->instruction, $this->order);
                 $token = $this->fileManager->getNextToken();
                 $this->order++;
+                $this->stats->incLoc();
             }
             $this->xmlGenerator->generate();
         }
+
+        private function checkUniqLabel(string $name) {
+            if(!in_array($name, $this->labels)) {
+                $this->stats->incLabels();
+                array_push($this->labels, $name);
+            }
+        }
+
     }
 
     class Instruction
@@ -240,6 +323,13 @@
 
     class Analysis
     {
+        private Stats $stats;
+
+        public function __construct(Stats $stats)
+        {
+            $this->stats = $stats;
+        }
+
         private function checkNumOfParameters($opCode, $numberOfParameters)
         {
             if(count(Instructions::INSTRUCTIONS[$opCode]) != $numberOfParameters)
@@ -258,6 +348,18 @@
             $opCode = mb_strtoupper($opCode);
             if(!array_key_exists($opCode, Instructions::INSTRUCTIONS))
                 throw new Exception("Undefined opCode!", Errors::INSTRUCTION_ERR);
+            $this->statsIncrementation($opCode);
+        }
+
+        private function statsIncrementation($opCode)
+        {
+            if (strcmp($opCode, "JUMP") == 0 ||
+                strcmp($opCode, "JUMPIFEQ") == 0 ||
+                strcmp($opCode, "JUMPIFNEQ") == 0 ||
+                strcmp($opCode, "CALL") == 0 ||
+                strcmp($opCode, "RETURN") == 0) {
+                $this->stats->incJumps();
+            }
         }
 
         private function isVariable($variable)
@@ -332,11 +434,11 @@
 
     class Stats
     {
-        private int $loc;
-        private int $comments;
-        private int $labels;
-        private int $jumps;
-        private int $file;
+        private $loc;
+        private $comments;
+        private $labels;
+        private $jumps;
+        private $file;
 
         public function setFile($file) {
             $this->file = $file;
@@ -358,39 +460,54 @@
             $this->jumps++;
         }
 
-        public function getLoc(): int
-        {
-            return $this->loc;
-        }
-
-        public function getComments(): int
-        {
-            return $this->comments;
-        }
-
-        public function getLabels(): int
-        {
-            return $this->labels;
-        }
-
-        public function getJumps(): int
-        {
-            return $this->jumps;
-        }
-
-        public function getFile(): int
-        {
-            return $this->file;
+        public function generateStats($parsedArguments) {
+            if (strcmp($this->file, "") == 0)
+                throw new Exception("Filename can not be empty", Errors::BAD_ARGUMENT);
+            $file = fopen($this->file, "w");
+            if($file) {
+                foreach ($parsedArguments as $argument) {
+                    switch ($argument) {
+                        case "labels":
+                            fwrite($file, $this->labels . "\n");
+                            break;
+                        case "comments":
+                            fwrite($file, $this->comments . "\n");
+                            break;
+                        case "loc":
+                            fwrite($file, $this->loc . "\n");
+                            break;
+                        case "jumps":
+                            fwrite($file, $this->jumps . "\n");
+                            break;
+                    }
+                }
+            }
+            fclose($file);
         }
     }
 
-    $fileManager = new FileManager(STDIN);
-    $analysis = new Analysis();
+    function printHelp(){
+        ;
+    }
+
+    $stats = new Stats();
+    $fileManager = new FileManager(STDIN, $stats);
+    $argParser = new ArgvParser();
+    $analysis = new Analysis($stats);
     $xmlGenerator = new XmlGenerator();
     $instruction = new Instruction();
-    $parser = new Parser($analysis, $xmlGenerator, $fileManager, $instruction);
+    $parser = new Parser($analysis, $xmlGenerator, $fileManager, $instruction, $stats);
     try {
+        $parsedArguments = $argParser->parseArgv($argv, $argc);
+        if(in_array("help", $parsedArguments)) {
+            printHelp();
+        }
         $parser->parse();
+        if(array_key_exists("stats", $parsedArguments)) {
+            $stats->setFile($parsedArguments["stats"]);
+            unset($parsedArguments["stats"]);
+            $stats->generateStats($parsedArguments);
+        }
     } catch (Exception $e) {
         exit($e->getCode());
     }
