@@ -75,6 +75,28 @@ class Regex
         const SYMBOL = "(". self::CONST . "|" . self::VARIABLE . ")";
     }
 
+const HELP = 'Script or filter (parser.php in programming language PHP 7.4) loads from standard input source code
+in IPPcode20, checks for lexical and syntax error and writes on standard output XML representation of given program
+
+Input Arguments:
+    --help          will return this text with information about script 
+                    (can be used only without another argument).
+    --stats=file    will enable statistics and they will be stored in given file
+    WARNING: Next arguments can be used only when --stats was specified!
+    --comments      will return to given file count of comments in file
+    --labels        will return to given file count uniq labels that are defined in program
+    --jumps         will return to given file count of jumps, calls and returns
+    --loc           will return to given file number of instructions without 
+                    header, comments and empty lines
+    NOTE: All these arguments can be used multiple times.
+    
+Error codes:
+    10 - using --help argument with other arguments or using arguments for 
+         statistic without --stats argument.
+    21 - wrong or missing  header of source code written in IPPcode20.
+    22 - undefined or wrong operand code in source code written in IPPcode20.
+    23 - other lexical or syntax error in source code written in IPPcode 20.'.PHP_EOL;
+
 class ArgvParser {
         private array $parsedArguments;
 
@@ -205,7 +227,7 @@ class FileManager
             $token = $this->fileManager->getNextToken();
             while (!$this->analysis->isEndingToken($token)) {
                 $arguments = $this->analysis->argParser($token);
-                if (strcmp(mb_strtoupper($token[0]), "LABEL"))
+                if (strcmp(mb_strtoupper($token[0]), "LABEL") == 0)
                     $this->checkUniqLabel($arguments[0]->getContent());
                 $this->instruction->setOpCode($token[0]);
                 $this->instruction->setArguments($arguments);
@@ -487,7 +509,7 @@ class FileManager
     }
 
     function printHelp(){
-        ;
+        echo HELP;
     }
 
     $stats = new Stats();
@@ -501,6 +523,7 @@ class FileManager
         $parsedArguments = $argParser->parseArgv($argv, $argc);
         if(in_array("help", $parsedArguments)) {
             printHelp();
+            exit(0);
         }
         $parser->parse();
         if(array_key_exists("stats", $parsedArguments)) {
@@ -509,6 +532,7 @@ class FileManager
             $stats->generateStats($parsedArguments);
         }
     } catch (Exception $e) {
+        error_log($e->getMessage());
         exit($e->getCode());
     }
 
