@@ -6,9 +6,8 @@ class TestCase
     private string $fileName;
     private bool $passed;
 
-    public function __construct(string $fileName)
+    public function __construct()
     {
-        $this->fileName = $fileName;
         $this->passed = false;
     }
 

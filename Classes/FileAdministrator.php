@@ -16,7 +16,6 @@ class FileAdministrator
 
     public function getTestSuites() : array
     {
-        $tests = array();
         foreach ($this->dirs as $dir)
         {
             $currentDir = new RecursiveDirectoryIterator($dir);
@@ -24,26 +23,41 @@ class FileAdministrator
             $currentDirIter = new RecursiveIteratorIterator($currentDir);
             if (!$this->recursive)
                 $currentDirIter->setMaxDepth("0");
-            foreach ($currentDirIter as $path)
-            {
-                if(!array_key_exists(dirname($path), $tests))
-                    $tests[dirname($path)] = array();
-                if(preg_match("/.*src/", $path))
-                    array_push($tests[dirname($path)], basename($path, ".src"));
-            }
+            $tests = $this->getTestCasesFromIterator($currentDirIter);
+            $this->createTestSuite($tests);
         }
+        return $this->testSuites;
+    }
 
+    private function getTestCasesFromIterator($currentDirIter) : array
+    {
+        $tests = array();
+        foreach ($currentDirIter as $path)
+        {
+            if(!array_key_exists(dirname($path), $tests))
+                $tests[dirname($path)] = array();
+            if(preg_match("/.*src/", $path))
+                array_push($tests[dirname($path)], basename($path, ".src"));
+        }
+        return $tests;
+    }
+
+    private function createTestSuite($tests)
+    {
         foreach ($tests as $testSuitName => $testCaseNames)
         {
-            $testsCases = array();
-            foreach ($testCaseNames as $testCaseName)
-            {
-                array_push($testsCases, new TestCase($testCaseName));
-            }
-            array_push($this->testSuites, new TestSuite($testSuitName, $testsCases));
+            $testsCases = $this->createTestCases($testCaseNames);
+            if(!array_key_exists($testSuitName, $this->testSuites))
+                $this->testSuites[$testSuitName] = new TestSuite($testsCases);
         }
+    }
 
-        print_r($this->testSuites);
-        return $this->testSuites;
+    private function createTestCases($testCaseNames) : array {
+        $testsCases = array();
+        foreach ($testCaseNames as $testCaseName)
+        {
+            $testsCases[$testCaseName] = new TestCase();
+        }
+        return $testsCases;
     }
 }

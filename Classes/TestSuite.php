@@ -6,9 +6,8 @@ class TestSuite
     private string $dirName;
     private array $testCases;
 
-    public function __construct($dirName, $testCases)
+    public function __construct($testCases)
     {
-        $this->dirName = $dirName;
         $this->testCases = $testCases;
     }
 
