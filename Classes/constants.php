@@ -23,7 +23,7 @@ class Instructions
         "EQ" => [Types::VARIABLE, Types::SYMBOL, Types::SYMBOL],
         "AND" => [Types::VARIABLE, Types::SYMBOL, Types::SYMBOL],
         "OR" => [Types::VARIABLE, Types::SYMBOL, Types::SYMBOL],
-        "NOT" => [Types::VARIABLE, Types::SYMBOL, Types::SYMBOL],
+        "NOT" => [Types::VARIABLE, Types::SYMBOL],
         "INT2CHAR" => [Types::VARIABLE, Types::SYMBOL],
         "STR2INT" => [Types::VARIABLE, Types::SYMBOL, Types::SYMBOL],
         "READ" => [Types::VARIABLE, Types::TYPE],
