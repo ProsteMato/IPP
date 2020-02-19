@@ -4,4 +4,5 @@
     require_once "./Classes/TestSuite.php";
 
     $fileAdmin = new FileAdministrator(array("./Tests"), true);
-    $fileAdmin->getTestSuites();
+    $testSuite = $fileAdmin->getTestSuites();
+    print_r($testSuite);
