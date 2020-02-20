@@ -3,29 +3,29 @@
 
 class FileAdministrator
 {
-    private array $dirs;
+    private string $dirs;
     private array $testSuites;
     private bool $recursive;
 
-    public function __construct(array $dirs, bool $recursive)
+    public function __construct(string $dir, bool $recursive)
     {
-        $this->dirs = $dirs;
+        if (!file_exists($dir)) {
+            throw new NotExistingFileException("\"$dir\" does not exist!");
+        }
+        $this->dirs = $dir;
         $this->recursive = $recursive;
         $this->testSuites = array();
     }
 
     public function getTestSuites() : array
     {
-        foreach ($this->dirs as $dir)
-        {
-            $currentDir = new RecursiveDirectoryIterator($dir);
-            $currentDir->setFlags(RecursiveDirectoryIterator::SKIP_DOTS);
-            $currentDirIter = new RecursiveIteratorIterator($currentDir);
-            if (!$this->recursive)
-                $currentDirIter->setMaxDepth("0");
-            $tests = $this->getTestCasesFromIterator($currentDirIter);
-            $this->createTestSuite($tests);
-        }
+        $currentDir = new RecursiveDirectoryIterator($this->dirs);
+        $currentDir->setFlags(RecursiveDirectoryIterator::SKIP_DOTS);
+        $currentDirIter = new RecursiveIteratorIterator($currentDir);
+        if (!$this->recursive)
+            $currentDirIter->setMaxDepth("0");
+        $tests = $this->getTestCasesFromIterator($currentDirIter);
+        $this->createTestSuite($tests);
         return $this->testSuites;
     }
 
