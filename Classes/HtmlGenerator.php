@@ -3,6 +3,14 @@
 
 class HtmlGenerator
 {
+
+    private int $id;
+
+    public function __construct()
+    {
+        $this->id = 0;
+    }
+
     function createHeader()
     {
         ?>
@@ -148,24 +156,26 @@ class HtmlGenerator
 
     public function createElement($tag)
     {
-        echo "<$tag>";
+        echo "<$tag>\n";
     }
 
     public function endElement($tag)
     {
-        echo "</$tag>";
+        echo "</$tag>\n";
     }
 
-    public function generateTestSuite(string $testSuiteName, $testPassed, $testFailed,array $testCases)
+    public function generateTestSuite(string $testSuiteName,int $testPassed,int $testFailed,array $testCases)
     {
+        $this->id++;
+        $total = $testFailed + $testPassed;
         ?>
         <div class="collapse">
-        <input type="checkbox" class="collapse_input" id="collapse1" />
-        <label for="collapse1" class="collapse_label">
+        <input type="checkbox" class="collapse_input" id="collapse<?php echo "$this->id"?>" />
+        <label for="collapse<?php echo "$this->id"?>" class="collapse_label">
             <span class="collapse_parameter"><?php echo $testSuiteName ?></span>
             <span class="collapse_parameter collapse_parameter_passed">Passed: <strong><?php echo $testPassed ?></strong></span>
             <span class="collapse_parameter collapse_parameter_failed">Failed: <strong><?php echo $testFailed ?></strong></span>
-            <span class="collapse_parameter"><strong>Total: 17</strong></span>
+            <span class="collapse_parameter"><strong>Total: <?php echo $total ?></strong></span>
         </label>
         <div class="collapse_content">
             <table class="table">
@@ -190,10 +200,10 @@ class HtmlGenerator
         {
             $resultClass = ($testCase->hasPassed()) ? "table_cell_passed" : "table_cell_failed"
             ?>
-            <tr>
-                <td class="table_cell table_cell_name"><?php echo $testCaseName ?></td>
-                <td class="table_cell <?php echo $resultClass ?>"><?php echo $testCase->hasPassed() ?></td>
-            </tr>
+                <tr>
+                    <td class="table_cell table_cell_name"><?php echo $testCaseName ?></td>
+                    <td class="table_cell <?php echo $resultClass ?>"><?php echo ($testCase->hasPassed())? "Passed" : "Failed" ?></td>
+                </tr>
             <?php
         }
     }
