@@ -50,6 +50,8 @@ class Errors
     const HEADER_ERR = 21;
     const INSTRUCTION_ERR = 22;
     const LEX_OR_SYNTAX_ERR = 23;
+    const ERR_OK = 0;
+    const NON_EXISTING_FILE = 11;
 }
 
 class Types

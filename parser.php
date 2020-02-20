@@ -1,14 +1,14 @@
 <?php
 
-    require_once "./Classes/Analysis.php";
-    require_once "./Classes/Arguments.php";
-    require_once "./Classes/ArgvParser.php";
+    require_once "./Classes/ParserClasses/Analysis.php";
+    require_once "./Classes/ParserClasses/Arguments.php";
+    require_once "./Classes/ParserClasses/ArgvParser.php";
     require_once "./Classes/constants.php";
-    require_once "./Classes/FileManager.php";
-    require_once "./Classes/Instruction.php";
-    require_once "./Classes/Stats.php";
-    require_once "./Classes/XmlGenerator.php";
-    require_once "./Classes/CodeParser.php";
+    require_once "./Classes/ParserClasses/FileManager.php";
+    require_once "./Classes/ParserClasses/Instruction.php";
+    require_once "./Classes/ParserClasses/Stats.php";
+    require_once "./Classes/ParserClasses/XmlGenerator.php";
+    require_once "./Classes/ParserClasses/CodeParser.php";
 
     function printHelp() {
         echo HELP;
