@@ -67,16 +67,7 @@
     } catch (NotExistingFileException $e){
         error_log($e->getMessage());
         exit(Errors::NON_EXISTING_FILE);
-    } catch (BadArgumentCombinationException $e) {
-        error_log($e->getMessage());
-        exit(Errors::BAD_ARGUMENT);
-    } catch (UndefinedArgumentException $e) {
-        error_log($e->getMessage());
-        exit(Errors::BAD_ARGUMENT);
-    } catch (RedefinitionOfArgumentException $e) {
-        error_log($e->getMessage());
-        exit(Errors::BAD_ARGUMENT);
-    } catch (RequiredValueException $e) {
+    } catch (ArgumentException $e) {
         error_log($e->getMessage());
         exit(Errors::BAD_ARGUMENT);
     }

@@ -1,7 +1,7 @@
 <?php
 
 
-class RequiredValueException extends Exception
+class RequiredValueException extends ArgumentException
 {
 
 }

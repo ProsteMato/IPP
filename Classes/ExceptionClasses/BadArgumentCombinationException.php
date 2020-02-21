@@ -1,7 +1,7 @@
 <?php
 
 
-class BadArgumentCombinationException extends Exception
+class BadArgumentCombinationException extends ArgumentException
 {
 
 }

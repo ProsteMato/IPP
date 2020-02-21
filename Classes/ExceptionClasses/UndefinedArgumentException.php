@@ -1,7 +1,7 @@
 <?php
 
 
-class UndefinedArgumentException extends Exception
+class UndefinedArgumentException extends ArgumentException
 {
 
 }

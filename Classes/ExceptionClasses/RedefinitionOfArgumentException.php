@@ -1,7 +1,7 @@
 <?php
 
 
-class RedefinitionOfArgumentException extends Exception
+class RedefinitionOfArgumentException extends ArgumentException
 {
 
 }
