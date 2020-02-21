@@ -12,7 +12,7 @@
 
     function printHelp() {
         echo HELP;
-        exit(0);
+        exit(Errors::ERR_OK);
     }
 
     $stats = new Stats();
