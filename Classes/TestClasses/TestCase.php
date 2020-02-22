@@ -12,9 +12,46 @@ class TestCase
         $this->passed = false;
     }
 
+    public function getTestCaseSrc() {
+        if(!is_file($this->fileName . ".src")) {
+            throw new NotExistingFileException("test.php::TestCase - File \"$this->fileName.src\" does not exist!");
+        }
+        return $this->fileName . ".src";
+    }
+
+    public function getTestCaseIn() {
+        if(!is_file($this->fileName . ".in")) {
+            throw new NotExistingFileException("test.php::TestCase - File \"$this->fileName.in\" does not exist!");
+        }
+        return $this->fileName . ".In";
+    }
+
+    public function getTestCaseOut() {
+        if(!is_file($this->fileName . ".out")) {
+            throw new NotExistingFileException("test.php::TestCase - File \"$this->fileName.out\" does not exist!");
+        }
+        return $this->fileName . ".out";
+    }
+
+    public function getTestCaseRc() {
+        if(!is_file($this->fileName . ".rc")) {
+            throw new NotExistingFileException("test.php::TestCase - File \"$this->fileName.rc\" does not exist!");
+        }
+        return $this->fileName . ".rc";
+    }
+
+    public function getBaseName() {
+        return basename($this->fileName);
+    }
+
     public function hasPassed() : bool
     {
         return $this->passed;
+    }
+
+    public function setPassed()
+    {
+        $this->passed = true;
     }
 
     public function runParser($file, $tmpFile) {
@@ -53,30 +90,5 @@ class TestCase
             $returnValue
         );
         return $returnValue;
-    }
-
-    public function getTestCaseSrc() {
-        return $this->fileName . ".src";
-    }
-
-    public function getTestCaseIn() {
-        return $this->fileName . ".in";
-    }
-
-    public function getTestCaseOut() {
-        return $this->fileName . ".out";
-    }
-
-    public function getTestCaseRc() {
-        return $this->fileName . ".rc";
-    }
-
-    public function getBaseName() {
-        return basename($this->fileName);
-    }
-
-    public function setPassed()
-    {
-        $this->passed = true;
     }
 }

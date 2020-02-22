@@ -42,7 +42,7 @@ class ArgParser
         for ($i = 1; $i < $argc; $i++) {
             $splitArgument = preg_split("/[=]/", $argv[$i]);
             if (!preg_match("/^--.*/", $splitArgument[0])) {
-                throw new UndefinedArgumentException("Invalid argument \"$splitArgument[0]\"");
+                throw new UndefinedArgumentException("test.php::ArgParser - Invalid argument \"$splitArgument[0]\"");
             }
             $splitArgument[0] = preg_replace("/^--/", "", $splitArgument[0]);
             $this->checkArgument($splitArgument);
@@ -53,10 +53,10 @@ class ArgParser
     private function checkArgument(array $splitArgument)
     {
         if(!in_array($splitArgument[0], $this->longOptions) && strcmp("help", $splitArgument[0]) != 0) {
-            throw new UndefinedArgumentException("Argument \"$splitArgument[0]\" is not defined!");
+            throw new UndefinedArgumentException("test.php::ArgParser - Argument \"$splitArgument[0]\" is not defined!");
         }
         if ($this->required[$splitArgument[0]] && !key_exists(1, $splitArgument)) {
-            throw new RequiredValueException("Argument \"$splitArgument[0]\" have required value!");
+            throw new RequiredValueException("test.php::ArgParser - Argument \"$splitArgument[0]\" have required value!");
         }
     }
 
@@ -64,7 +64,7 @@ class ArgParser
     {
         if ($this->required[$splitArgument[0]]) {
             if (key_exists($splitArgument[0], $this->parsedOptions)) {
-                throw new RedefinitionOfArgumentException("Argument $splitArgument[0] is already defined!");
+                throw new RedefinitionOfArgumentException("test.php::ArgParser - Argument $splitArgument[0] is already defined!");
             }
             $this->parsedOptions[$splitArgument[0]] = $splitArgument[1];
         } else {
@@ -76,7 +76,7 @@ class ArgParser
         foreach (array_keys($this->parsedOptions) as $option) {
             foreach ($this->invalidCombinations[$option] as $invalidCombination) {
                 if (isset($this->parsedOptions[$invalidCombination])){
-                    throw new BadArgumentCombinationException("Argument \"$option\" and argument \"$invalidCombination\" cant be used together!");
+                    throw new BadArgumentCombinationException("test.php::ArgParser - Argument \"$option\" and argument \"$invalidCombination\" cant be used together!");
                 }
             }
         }

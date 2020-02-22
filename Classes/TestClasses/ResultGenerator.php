@@ -14,12 +14,12 @@ class ResultGenerator
         $this->htmlGenerator->createHtmlElement();
         $this->htmlGenerator->createHeader();
         $this->htmlGenerator->createElement("body");
-        foreach ($testSuites as $testSuiteName => $testSuites) {
+        foreach ($testSuites as $testSuiteName => $testSuite) {
             $this->htmlGenerator->generateTestSuite
             (
-                $testSuiteName, $testSuites->getTestCasesPassCount(),
-                $testSuites->getTestCasesFailCount(),
-                $testSuites->getTestCases()
+                $testSuiteName, $testSuite->getTestCasesPassCount(),
+                $testSuite->getTestCasesFailCount(),
+                $testSuite->getTestCases()
             );
         }
         $this->htmlGenerator->endElement("body");

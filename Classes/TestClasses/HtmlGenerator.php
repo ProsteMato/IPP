@@ -17,11 +17,10 @@ class HtmlGenerator
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,700&display=swap" rel="stylesheet">
             <title>Tests Results</title>
             <style>
                 * {
-                    font-family: 'Open Sans', sans-serif;
+                    font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
                 }
 
                 .collapse_input {
@@ -34,7 +33,7 @@ class HtmlGenerator
                     background-color: #f8f9fc;
                     border-bottom: 1px solid #e7e9f3;
                     color: #383a42;
-                    font-size: 14px;
+                    font-size: 18px;
                     line-height: 1.5;
                     transition: background-color 0.25s;
                     cursor: pointer;
@@ -96,14 +95,14 @@ class HtmlGenerator
                 .table_head_cell {
                     padding: 5px 10px;
                     color: #8e919f;
-                    font-size: 12px;
+                    font-size: 16px;
                     font-weight: 700;
                     text-align: left;
                 }
 
                 .table_cell {
                     color: #383a42;
-                    font-size: 12px;
+                    font-size: 15px;
                     padding: 5px 10px;
                 }
 
@@ -199,11 +198,10 @@ class HtmlGenerator
         foreach($testCases as $testCaseName => $testCase)
         {
             $resultClass = ($testCase->hasPassed()) ? "table_cell_passed" : "table_cell_failed"
-            ?>
-                <tr>
-                    <td class="table_cell table_cell_name"><?php echo basename($testCaseName) ?></td>
-                    <td class="table_cell <?php echo $resultClass ?>"><?php echo ($testCase->hasPassed())? "Passed" : "Failed" ?></td>
-                </tr>
+            ?><tr>
+                <td class="table_cell table_cell_name"><?php echo basename($testCaseName) ?></td>
+                <td class="table_cell <?php echo $resultClass ?>"><?php echo ($testCase->hasPassed())? "Passed" : "Failed" ?></td>
+            </tr>
             <?php
         }
     }

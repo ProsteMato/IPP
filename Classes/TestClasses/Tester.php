@@ -20,7 +20,7 @@ class Tester
         } else if (!$parseOnly && !$intOnly) {
             $this->mode = self::BOTH;
         } else {
-            throw new BadArgumentCombinationException("You cant combine parserOnly with intOnly and reverse!");
+            throw new BadArgumentCombinationException("test.php::Tester - You cant combine parserOnly with intOnly and reverse!");
         }
         $this->parserFile = $parserFile;
         $this->interpretFile = $interpretFile;
@@ -31,7 +31,7 @@ class Tester
         $this->checkFiles();
         foreach ($testSuites as $testSuite) {
             if (!$testSuite instanceof TestSuite) {
-                throw new NotInstanceOfException("\"$testSuite\" is not instance of \"TestSuite\"");
+                throw new NotInstanceOfException("test.php::Tester - Object \"$testSuite\" is not instance of \"TestSuite\"");
             }
             $testSuite->checkAndCreateRequiredFiles();
             $testCases = $testSuite->getTestCases();
@@ -92,15 +92,15 @@ class Tester
         switch($this->mode) {
             case self::PARSE_ONLY:
                 if(!is_file($this->jExamXmlFile) || !is_file($this->parserFile))
-                    throw new NotExistingFileException("\"$this->jExamXmlFile\" or \"$this->parserFile\" does not exist!");
+                    throw new NotExistingFileException("test.php::Tester - File \"$this->jExamXmlFile\" or file \"$this->parserFile\" does not exist!");
                 break;
             case self::INT_ONLY:
                 if(!is_file($this->interpretFile))
-                    throw new NotExistingFileException("\"$this->interpretFile\" does not exist!");
+                    throw new NotExistingFileException("test.php::Tester - File \"$this->interpretFile\" does not exist!");
                 break;
             case self::BOTH:
                 if(!is_file($this->interpretFile) || !is_file($this->parserFile))
-                    throw new NotExistingFileException("\"$this->interpretFile\" or \"$this->parserFile\" does not exist!");
+                    throw new NotExistingFileException("test.php::Tester - File \"$this->interpretFile\" or file\"$this->parserFile\" does not exist!");
         }
     }
 }
