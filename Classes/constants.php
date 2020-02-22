@@ -52,6 +52,7 @@ class Errors
     const LEX_OR_SYNTAX_ERR = 23;
     const ERR_OK = 0;
     const NON_EXISTING_FILE = 11;
+    const INTERNAL_ERROR = 99;
 }
 
 class Types
