@@ -201,7 +201,7 @@ class HtmlGenerator
             $resultClass = ($testCase->hasPassed()) ? "table_cell_passed" : "table_cell_failed"
             ?>
                 <tr>
-                    <td class="table_cell table_cell_name"><?php echo $testCaseName ?></td>
+                    <td class="table_cell table_cell_name"><?php echo basename($testCaseName) ?></td>
                     <td class="table_cell <?php echo $resultClass ?>"><?php echo ($testCase->hasPassed())? "Passed" : "Failed" ?></td>
                 </tr>
             <?php

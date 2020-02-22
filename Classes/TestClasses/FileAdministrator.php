@@ -37,7 +37,7 @@ class FileAdministrator
             if(!array_key_exists(dirname($path), $tests))
                 $tests[dirname($path)] = array();
             if(preg_match("/.*src/", $path))
-                array_push($tests[dirname($path)], basename($path, ".src"));
+                array_push($tests[dirname($path)], dirname($path) ."/". basename($path, ".src"));
         }
         return $tests;
     }
@@ -48,7 +48,7 @@ class FileAdministrator
         {
             $testsCases = $this->createTestCases($testCaseNames);
             if(!array_key_exists($testSuitName, $this->testSuites))
-                $this->testSuites[$testSuitName] = new TestSuite($testsCases);
+                $this->testSuites[$testSuitName] = new TestSuite($testsCases, $testSuitName);
         }
     }
 
@@ -56,7 +56,7 @@ class FileAdministrator
         $testsCases = array();
         foreach ($testCaseNames as $testCaseName)
         {
-            $testsCases[$testCaseName] = new TestCase();
+            $testsCases[$testCaseName] = new TestCase($testCaseName);
         }
         return $testsCases;
     }
