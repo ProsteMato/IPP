@@ -6,14 +6,30 @@ class TestSuite
     private string $dirName;
     private array $testCases;
 
-    public function __construct($testCases)
+    public function __construct($testCases, $dirName)
     {
+        $this->dirName = $dirName;
         $this->testCases = $testCases;
     }
 
-    public function getDirName() : string
+    public function getDir()
     {
         return $this->dirName;
+    }
+
+    public function checkAndCreateRequiredFiles()
+    {
+        foreach ($this->testCases as $testCase) {
+            if (!is_file($testCase->getTestCaseOut())) {
+                file_put_contents($testCase->getTestCaseOut(), "");
+            }
+            if (!is_file($testCase->getTestCaseIn())) {
+                file_put_contents($testCase->getTestCaseIn(), "");
+            }
+            if (!is_file($testCase->getTestCaseRc())) {
+                file_put_contents($testCase->getTestCaseRc(), "0");
+            }
+        }
     }
 
     public function getTestCases() : array
