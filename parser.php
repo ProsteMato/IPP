@@ -15,15 +15,14 @@
         exit(Errors::ERR_OK);
     }
 
-    $stats = new Stats();
-    $fileManager = new FileManager(STDIN, $stats);
-    $argParser = new ArgvParser();
-    $analysis = new Analysis($stats);
-    $xmlGenerator = new XmlGenerator();
-    $instruction = new Instruction();
-    $parser = new CodeParser($analysis, $xmlGenerator, $fileManager, $instruction, $stats);
-
     try {
+        $stats = new Stats();
+        $fileManager = new FileManager(STDIN, $stats);
+        $argParser = new ArgvParser();
+        $analysis = new Analysis($stats);
+        $xmlGenerator = new XmlGenerator();
+        $instruction = new Instruction();
+        $parser = new CodeParser($analysis, $xmlGenerator, $fileManager, $instruction, $stats);
         $parsedArguments = $argParser->parseArgv($argv, $argc);
         if(in_array("help", $parsedArguments))
             printHelp();
