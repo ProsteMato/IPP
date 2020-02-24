@@ -24,7 +24,6 @@ class ArgParser
         $this->requiredCombination["help"] = array();
         $this->repeatableArguments["help"] = false;
         $this->required["help"] = false;
-        $this->parsedOptions = array();
         $this->order = 0;
     }
 
@@ -119,7 +118,7 @@ class ArgParser
         if ($this->required[$splitArgument[0]]) {
             array_push($this->parsedOptions[$splitArgument[0]], $splitArgument[0]);
         } else {
-            array_push($this->parsedOptions[$splitArgument[0]], $this->order);
+            $this->parsedOptions[$splitArgument[0]][$this->order] = true;
             $this->order++;
         }
     }

@@ -58,19 +58,25 @@ class Stats
     }
 
     private function arguments2Array($parsedArguments) {
-        $newArguments = array();
+        global $argc;
+        $newArguments = array_fill(0, $argc, "");
         foreach ($parsedArguments as $key => $argument) {
             switch ($key) {
                 case "labels":
                 case "comments":
                 case "loc":
                 case "jumps":
-                    foreach ($argument as $order)
-                        array_splice($newArguments, (int)$order, 0, $key);
+                    foreach ($argument as $order => $value)
+                        $newArguments[$order] = $key;
             }
         }
-        return $newArguments;
+        return array_filter($newArguments, array($this, 'checkEmpty'));
     }
+
+    private function checkEmpty($argument){
+        return !empty($argument);
+    }
+
 }
 
 
