@@ -6,6 +6,7 @@
     require_once "./Classes/TestClasses/HtmlGenerator.php";
     require_once "./Classes/TestClasses/ResultGenerator.php";
     require_once "./Classes/TestClasses/Tester.php";
+    require_once "./Classes/ExceptionClasses/InternalException.php";
     require_once "./Classes/ExceptionClasses/ArgumentException.php";
     require_once "./Classes/ExceptionClasses/NotExistingFileException.php";
     require_once "./Classes/ExceptionClasses/BadArgumentCombinationException.php";
@@ -20,16 +21,19 @@
         exit(Errors::ERR_OK);
     }
 
+    $argParser = (new ArgParser())
+        ->addArgument("parse-only", false, false, array("int-only", "int-script"))
+        ->addArgument("int-only", false, false, array("parse-only", "parse-script"))
+        ->addArgument("jexamxml", true, "/pub/courses/ipp/jexamxml/jexamxml.jar")
+        ->addArgument("parse-script", true, "./parser.php")
+        ->addArgument("int-script", true, "./interpret.py")
+        ->addArgument("directory", true, "./")
+        ->addArgument("recursive", false, false);
+
     try {
-        $argParser = (new ArgParser())
-            ->addArgument("parse-only", false, false, array("int-only", "int-script"))
-            ->addArgument("int-only", false, false, array("parse-only", "parse-script"))
-            ->addArgument("jexamxml", true, "/pub/courses/ipp/jexamxml/jexamxml.jar")
-            ->addArgument("parse-script", true, "./parser.php")
-            ->addArgument("int-script", true, "./interpret.py")
-            ->addArgument("directory", true, "./")
-            ->addArgument("recursive", false, false);
         $options = $argParser->parseArguments();
+        if (isset($options["help"]))
+            printHelp();
         $fileAdmin = new FileAdministrator($options["directory"], $options["recursive"]);
         $testSuite = $fileAdmin->getTestSuites();
         $tester = new Tester(
@@ -44,7 +48,7 @@
     } catch (ArgumentException $e) {
         error_log($e->getMessage());
         exit(Errors::BAD_ARGUMENT);
-    } catch (NotInstanceOfException $e) {
+    } catch (InternalException $e) {
         error_log($e->getMessage());
         exit(Errors::INTERNAL_ERROR);
     }

@@ -1,7 +1,7 @@
 <?php
 
 
-class NotInstanceOfException extends Exception
+class NotInstanceOfException extends InternalException
 {
 
 }

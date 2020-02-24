@@ -57,10 +57,10 @@ class Errors
 
 class Types
 {
-    const VARIABLE = 1;
-    const LABEL = 2;
-    const SYMBOL = 3;
-    const TYPE = 4;
+    const VARIABLE = "var";
+    const LABEL = "label";
+    const SYMBOL = "var";
+    const TYPE = "type";
 }
 
 class Regex

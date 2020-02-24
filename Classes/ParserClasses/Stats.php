@@ -3,10 +3,18 @@
 
 class Stats
 {
-    private $loc;
-    private $comments;
-    private $labels;
-    private $jumps;
+    private int $loc;
+    private int $comments;
+    private int $labels;
+    private int $jumps;
+
+    public function __construct()
+    {
+        $this->loc = 0;
+        $this->jumps = 0;
+        $this->labels = 0;
+        $this->comments = 0;
+    }
 
     public function incLoc() {
         $this->loc++;
@@ -24,13 +32,12 @@ class Stats
         $this->jumps++;
     }
 
-    public function generateStats($parsedArguments) {
-        if (strcmp($parsedArguments["stats"], "") == 0)
-            throw new Exception("Filename can not be empty", Errors::BAD_ARGUMENT);
+    public function generateStats($parsedArguments)
+    {
         $file = fopen($parsedArguments["stats"], "w");
-        unset($parsedArguments["stats"]);
-        if($file) {
-            foreach ($parsedArguments as $argument) {
+        $arguments = $this->arguments2Array($parsedArguments);
+        if ($file) {
+            foreach ($arguments as $argument) {
                 switch ($argument) {
                     case "labels":
                         fwrite($file, $this->labels . "\n");
@@ -49,4 +56,21 @@ class Stats
         }
         fclose($file);
     }
+
+    private function arguments2Array($parsedArguments) {
+        $newArguments = array();
+        foreach ($parsedArguments as $key => $argument) {
+            switch ($key) {
+                case "labels":
+                case "comments":
+                case "loc":
+                case "jumps":
+                    foreach ($argument as $order)
+                        array_splice($newArguments, (int)$order, 0, $key);
+            }
+        }
+        return $newArguments;
+    }
 }
+
+

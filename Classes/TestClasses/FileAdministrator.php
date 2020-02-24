@@ -10,7 +10,7 @@ class FileAdministrator
     public function __construct(string $dir, bool $recursive)
     {
         if (!file_exists($dir)) {
-            throw new NotExistingFileException("test.php::FileAdministrator - Directory \"$dir\" does not exist!");
+            throw new NotExistingFileException(basename(__FILE__)."::".__FUNCTION__." - Directory \"$dir\" does not exist!");
         }
         $this->dirs = $dir;
         $this->recursive = $recursive;
