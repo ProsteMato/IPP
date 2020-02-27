@@ -27,14 +27,18 @@
         ->addArgument("jexamxml", true, "/pub/courses/ipp/jexamxml/jexamxml.jar")
         ->addArgument("parse-script", true, "./parser.php")
         ->addArgument("int-script", true, "./interpret.py")
-        ->addArgument("directory", true, "./")
-        ->addArgument("recursive", false, false);
+        ->addArgument("directory", true, "./", array("testlist"))
+        ->addArgument("recursive", false, false)
+        ->addArgument("testlist", true, null, array("directory"))
+        ->addArgument("match", true, "/.*src/");
+
 
     try {
         $options = $argParser->parseArguments();
         if (isset($options["help"]))
             printHelp();
-        $fileAdmin = new FileAdministrator($options["directory"], $options["recursive"]);
+        $files = (key_exists("testlist", $options)) ? $options["testlist"] : $options["directory"];
+        $fileAdmin = new FileAdministrator($files, $options["recursive"], $options["match"]);
         $testSuite = $fileAdmin->getTestSuites();
         $tester = new Tester(
             $options["parse-only"], $options["int-only"], $options["parse-script"], $options["int-script"], $options["jexamxml"]

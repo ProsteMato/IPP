@@ -3,49 +3,82 @@
 
 class FileAdministrator
 {
-    private string $dirs;
+    private string $file;
     private array $testSuites;
+    private array $testCases;
+    private string $regex;
+    private array $files;
     private bool $recursive;
 
-    public function __construct(string $dir, bool $recursive)
-    {
-        if (!file_exists($dir)) {
-            throw new NotExistingFileException(basename(__FILE__)."::".__FUNCTION__." - Directory \"$dir\" does not exist!");
+    public function __construct(string $file, bool $recursive, string $regex) {
+        if(preg_match($regex, null) === false) {
+            throw new NotExistingFileException(basename(__FILE__)."::".__FUNCTION__." - $regex is not a valid regular expression");
         }
-        $this->dirs = $dir;
+        if (!file_exists($file)) {
+            throw new NotExistingFileException(basename(__FILE__)."::".__FUNCTION__." - Directory \"$file\" does not exist!");
+        }
+        $this->file = $file;
         $this->recursive = $recursive;
+        $this->regex = $regex;
         $this->testSuites = array();
+        $this->testCases = array();
+        $this->files = array();
+
     }
 
-    public function getTestSuites() : array
-    {
-        $currentDir = new RecursiveDirectoryIterator($this->dirs);
-        $currentDir->setFlags(RecursiveDirectoryIterator::SKIP_DOTS);
-        $currentDirIter = new RecursiveIteratorIterator($currentDir);
-        if (!$this->recursive)
-            $currentDirIter->setMaxDepth("0");
-        $tests = $this->getTestCasesFromIterator($currentDirIter);
-        $this->createTestSuite($tests);
+    public function getTestSuites() : array {
+        $this->getFiles();
+        foreach ($this->files as $file) {
+            $file = trim($file);
+            $currentDir = new RecursiveDirectoryIterator($file);
+            $currentDir->setFlags(RecursiveDirectoryIterator::SKIP_DOTS);
+            $currentDirIter = new RecursiveIteratorIterator($currentDir);
+            if (!$this->recursive)
+                $currentDirIter->setMaxDepth("0");
+            $this->getTestCasesFromIterator($currentDirIter);
+        }
+        $this->createTestSuite();
         return $this->testSuites;
     }
 
-    private function getTestCasesFromIterator($currentDirIter) : array
-    {
-        $tests = array();
-        foreach ($currentDirIter as $path)
-        {
-            if(!array_key_exists(dirname($path), $tests))
-                $tests[dirname($path)] = array();
-            if(preg_match("/.*src/", $path))
-                array_push($tests[dirname($path)], dirname($path) ."/". basename($path, ".src"));
+    private function getTestCasesFromIterator($currentDirIter) {
+        foreach ($currentDirIter as $path) {
+            $this->addTestCase($path);
         }
-        return $tests;
     }
 
-    private function createTestSuite($tests)
-    {
-        foreach ($tests as $testSuitName => $testCaseNames)
-        {
+    private function addTestCase($file) {
+        $pathInfo = pathinfo($file);
+        $testCase = $pathInfo["dirname"] ."/". $pathInfo["filename"];
+        if(!array_key_exists($pathInfo["dirname"], $this->testCases))
+            $this->testCases[$pathInfo["dirname"]] = array();
+        if(preg_match($this->regex, $file) && !in_array($testCase, $this->testCases[$pathInfo["dirname"]]))
+            array_push($this->testCases[$pathInfo["dirname"]], $testCase);
+    }
+
+    private function getFiles() {
+        if(is_dir($this->file)) {
+           array_push($this->files, $this->file);
+        } else if(is_file($this->file)) {
+            $this->files = file($this->file);
+            $this->filterFiles();
+        }
+    }
+
+    private function filterFiles() {
+        foreach ($this->files as $key => $file) {
+            $file = trim($file);
+            if (is_file($file) && preg_match($this->regex, $file)) {
+                $this->addTestCase($file);
+                unset($this->files[$key]);
+            } else if (!is_dir($file)) {
+                throw new NotExistingFileException(basename(__FILE__)."::".__FUNCTION__." - Directory \"$file\" does not exist!");
+            }
+        }
+    }
+
+    private function createTestSuite() {
+        foreach ($this->testCases as $testSuitName => $testCaseNames) {
             $testsCases = $this->createTestCases($testCaseNames);
             if(!array_key_exists($testSuitName, $this->testSuites))
                 $this->testSuites[$testSuitName] = new TestSuite($testsCases, $testSuitName);
