@@ -60,7 +60,8 @@ class FileAdministrator
 
     private function getTestCasesFromIterator($currentDirIter) {
         foreach ($currentDirIter as $path) {
-            $this->addTestCase($path);
+            if (preg_match("/.*src/", $path))
+                $this->addTestCase($path);
         }
     }
 
