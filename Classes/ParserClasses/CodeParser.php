@@ -1,5 +1,11 @@
 <?php
-
+/**
+ * @file    CodeParser.php
+ * @class   CodeParser
+ * @date    1.3.2020
+ * @author  Martin Koči (xkocim05@stud.fit.vutbr.cz)
+ * @brief   This class that is doing all the job. It starts witch checking src file and then generating it to the output.
+ */
 
 class CodeParser
 {
@@ -22,6 +28,11 @@ class CodeParser
         $this->order = 1;
     }
 
+    /**
+     * @brief This method is parsing and checking line by line the input src file and generating the output xml representation
+     * @throws InvalidHeaderException
+     * @throws InvalidInstructionException
+     */
     public function parse()
     {
         $token = $this->fileManager->getNextToken();

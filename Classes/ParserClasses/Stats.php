@@ -1,5 +1,11 @@
 <?php
-
+/**
+ * @file    Stats.php
+ * @class   Stats
+ * @date    1.3.2020
+ * @author  Martin Koči (xkocim05@stud.fit.vutbr.cz)
+ * @brief   This class is for storing the analysis of src file and output it to the output file if necessary.
+ */
 
 class Stats
 {
@@ -16,22 +22,38 @@ class Stats
         $this->comments = 0;
     }
 
+    /**
+     * @brief increment the loc variable
+     */
     public function incLoc() {
         $this->loc++;
     }
 
+    /**
+     * @brief increment the comments variable
+     */
     public function incComments() {
         $this->comments++;
     }
 
+    /**
+     * @brief increment the labels variable
+     */
     public function incLabels() {
         $this->labels++;
     }
 
+    /**
+     * @brief increment the jumps variable
+     */
     public function incJumps() {
         $this->jumps++;
     }
 
+    /**
+     * @param $parsedArguments  array information where and what to generate
+     * @brief   This function generates the statistics about src input file.
+     */
     public function generateStats($parsedArguments)
     {
         $file = fopen($parsedArguments["stats"], "w");

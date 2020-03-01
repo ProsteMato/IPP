@@ -1,6 +1,12 @@
 <?php
 
-
+/**
+ * @file    Tester.php
+ * @class   Tester
+ * @date    1.3.2020
+ * @author  Martin Koči (xkocim05@stud.fit.vutbr.cz)
+ * @brief   This class is testing all TestSuites and storing results.
+ */
 class Tester
 {
     private int $mode;
@@ -27,6 +33,12 @@ class Tester
         $this->jExamXmlFile = $jExamXmlFile;
     }
 
+    /**
+     * @param array $testSuites TestSuites that will be ran
+     * @throws NotExistingFileException
+     * @throws NotInstanceOfException
+     * @brief This method runs all testsSuites and storing results.
+     */
     public function runTests(array $testSuites) {
         $this->checkFiles();
         foreach ($testSuites as $testSuite) {

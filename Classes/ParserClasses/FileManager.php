@@ -1,5 +1,11 @@
 <?php
-
+/**
+ * @file    FileManager.php
+ * @class   FileManager
+ * @date    1.3.2020
+ * @author  Martin Koči (xkocim05@stud.fit.vutbr.cz)
+ * @brief   This class is for managing input file and getting tokens
+ */
 
 class FileManager
 {
@@ -17,6 +23,10 @@ class FileManager
         return fgets($this->file);
     }
 
+    /**
+     * @brief This method is reading line by line from input file and parsing the input line and returning it.
+     * @return array|null
+     */
     public function getNextToken()
     {
         while(!feof($this->file)) {

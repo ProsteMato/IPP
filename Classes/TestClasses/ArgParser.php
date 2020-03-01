@@ -1,6 +1,12 @@
 <?php
 
-
+/**
+ * @file    ArgParser.php
+ * @class   ArgParser
+ * @date    1.3.2020
+ * @author  Martin Koči (xkocim05@stud.fit.vutbr.cz)
+ * @brief   This class is parsing and checking correction of set arguments.
+ */
 class ArgParser
 {
     private array $longOptions;
@@ -27,6 +33,11 @@ class ArgParser
         $this->order = 0;
     }
 
+    /**
+     * @return array    will return parsed argv arguments
+     * @throws BadArgumentCombinationException
+     * @brief This method parse argv and checks it with defined arguments.
+     */
     public function parseArguments()
     {
         $this->createArguments();
@@ -38,6 +49,16 @@ class ArgParser
         return $this->parsedOptions;
     }
 
+    /**
+     * @param string $longOption    longOption argument
+     * @param bool $expectValue     if argument have a expected value
+     * @param null $defaultValue    optional default parameter for argument
+     * @param array $invalidCombinations    optional invalid combinations with other arguments
+     * @param array $requiredCombination    optional required combinations with other arguments
+     * @return $this
+     * @throws InternalRedefinitionOfArgumentException
+     * @brief this method is for adding new non-repeatable arguments.
+     */
     public function addArgument(string $longOption, bool $expectValue, $defaultValue = null,
                                 array $invalidCombinations = array(), array $requiredCombination = array()) {
         $this->repeatableArguments[$longOption] = false;
@@ -45,6 +66,16 @@ class ArgParser
         return $this;
     }
 
+    /**
+     * @param string $longOption    longOption argument
+     * @param bool $expectValue     if argument have a expected value
+     * @param null $defaultValue    optional default parameter for argument
+     * @param array $invalidCombinations    optional invalid combinations with other arguments
+     * @param array $requiredCombination    optional required combinations with other arguments
+     * @return $this
+     * @throws InternalRedefinitionOfArgumentException
+     * @brief this method is for adding new repeatable arguments.
+     */
     public function addRepeatableArgument(string $longOption, bool $expectValue, $defaultValue = null,
                                           array $invalidCombinations = array(), array $requiredCombination = array()) {
         $this->repeatableArguments[$longOption] = true;
@@ -55,7 +86,7 @@ class ArgParser
     private function setArgumentParameters(string $longOption, bool $expectValue, $defaultValue = null,
                                            array $invalidCombinations = array(), array $requiredCombination = array()) {
         if (in_array($longOption, $this->longOptions))
-            throw new InternalRedefinationOfArgumentException(basename(__FILE__)."::".__FUNCTION__." - Argument \"$longOption\" is already defined!");
+            throw new InternalRedefinitionOfArgumentException(basename(__FILE__)."::".__FUNCTION__." - Argument \"$longOption\" is already defined!");
         array_push($this->longOptions, $longOption);
         array_push($this->invalidCombinations["help"], $longOption);
         $this->required[$longOption] = $expectValue;

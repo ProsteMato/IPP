@@ -1,6 +1,12 @@
 <?php
 
-
+/**
+ * @class   HtmlGenerator
+ * @file    HtmlGenerator.php
+ * @date    1.3.2020
+ * @author  Martin Koči (xkocim05@stud.fit.vutbr.cz)
+ * @brief   This class is for generating HTML document for results of testing
+ */
 class HtmlGenerator
 {
 
@@ -11,7 +17,10 @@ class HtmlGenerator
         $this->id = 0;
     }
 
-    function createHeader()
+    /**
+     * @brief This method will generate header of HTML document and styles that will be used.
+     */
+    public function createHeader()
     {
         ?>
         <head>
@@ -145,6 +154,10 @@ class HtmlGenerator
         </head>
         <?php
     }
+
+    /**
+     * @brief This method will generate starting HTML document
+     */
     public function createHtmlElement()
     {
         ?>
@@ -153,16 +166,31 @@ class HtmlGenerator
         <?php
     }
 
+    /**
+     * @param string $tag   Tag that will be generated.
+     * @brief This method will generate starting tag
+     */
     public function createElement($tag)
     {
         echo "<$tag>\n";
     }
 
+    /**
+     * @param string $tag Tag will be generated
+     * @brief This method will generate ending tag
+     */
     public function endElement($tag)
     {
         echo "</$tag>\n";
     }
 
+    /**
+     * @param string $testSuiteName Test suite name
+     * @param int $testPassed   count of passed tests
+     * @param int $testFailed   count of failed tests
+     * @param array $testCases  array of test cases.
+     * @brief This method will generate results for each TestSuite.
+     */
     public function generateTestSuite(string $testSuiteName,int $testPassed,int $testFailed,array $testCases)
     {
         $this->id++;

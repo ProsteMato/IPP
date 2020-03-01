@@ -1,6 +1,12 @@
 <?php
 
-
+/**
+ * @file    TestSuites.php
+ * @class   TestSuites
+ * @date    1.3.2020
+ * @author  Martin Koči (xkocim05@stud.fit.vutbr.cz)
+ * @brief   This class stores all information about TestSuite and TestCases and operations above them.
+ */
 class TestSuite
 {
     private string $dirName;
@@ -12,11 +18,17 @@ class TestSuite
         $this->testCases = $testCases;
     }
 
+    /**
+     * @return string return dirname of TestSuite
+     */
     public function getDir()
     {
         return $this->dirName;
     }
 
+    /**
+     * @brief checks all Test Cases and they files and if some from req. files are missing generate it.
+     */
     public function checkAndCreateRequiredFiles()
     {
         foreach ($this->testCases as $testCase) {
@@ -32,11 +44,18 @@ class TestSuite
         }
     }
 
+    /**
+     * @return array
+     * @brief this method returns testCases
+     */
     public function getTestCases() : array
     {
         return $this->testCases;
     }
 
+    /**
+     * @return int passed testCases
+     */
     public function getTestCasesPassCount() : int
     {
         $passed = 0;
@@ -48,6 +67,9 @@ class TestSuite
         return $passed;
     }
 
+    /**
+     * @return int failed testCases
+     */
     public function getTestCasesFailCount() : int
     {
         return count($this->testCases) - $this->getTestCasesPassCount();
