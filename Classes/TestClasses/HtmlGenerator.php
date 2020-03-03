@@ -150,6 +150,17 @@ class HtmlGenerator
                 .table_cell_failed::after {
                     background-image: url("data:image/svg+xml;charset=UTF-8, %3csvg xmlns='http://www.w3.org/2000/svg' height='24' viewBox='0 0 24 24' width='24'%3e%3cpath d='M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z' fill='%23d60f0f'/%3e%3cpath d='M0 0h24v24H0z' fill='none'/%3e%3c/svg%3e");
                 }
+
+                .header {
+                    position: relative;
+                    display: flex;
+                    background-color: #f8f9fc;
+                    border-bottom: 1px solid #e7e9f3;
+                    color: #383a42;
+                    font-size: 18px;
+                    line-height: 1.5;
+                    transition: background-color 0.25s;
+                }
             </style>
         </head>
         <?php
@@ -184,6 +195,31 @@ class HtmlGenerator
         echo "</$tag>\n";
     }
 
+    public function generateResultHeader(int $testSuites, int $tests, int $passedTests, int $failedTests)
+    {
+    ?>
+        <div class="header">
+            <table>
+                <thead></thead>
+                <tbody>
+                    <tr>
+                        <td class="collapse_parameter">Total Number of Test Suites:  <strong><?php echo "$testSuites" ?></strong></td>
+                    </tr>
+                    <tr>
+                        <td class="collapse_parameter">Total Number of Test Cases:  <strong><?php echo "$tests" ?></strong></td>
+                    </tr>
+                    <tr>
+                        <td class="collapse_parameter collapse_parameter_passed">Total Passed:  <strong><?php echo "$passedTests" ?></strong></td>
+                    </tr>
+                    <tr>
+                        <td class="collapse_parameter collapse_parameter_failed">Total Failed:  <strong><?php echo "$failedTests" ?></strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    <?php
+    }
+
     /**
      * @param string $testSuiteName Test suite name
      * @param int $testPassed   count of passed tests
@@ -199,10 +235,10 @@ class HtmlGenerator
         <div class="collapse">
         <input type="checkbox" class="collapse_input" id="collapse<?php echo "$this->id"?>" />
         <label for="collapse<?php echo "$this->id"?>" class="collapse_label">
-            <span class="collapse_parameter"><?php echo $testSuiteName ?></span>
-            <span class="collapse_parameter collapse_parameter_passed">Passed: <strong><?php echo $testPassed ?></strong></span>
-            <span class="collapse_parameter collapse_parameter_failed">Failed: <strong><?php echo $testFailed ?></strong></span>
-            <span class="collapse_parameter"><strong>Total: <?php echo $total ?></strong></span>
+            <span class="collapse_parameter"><?php echo "$testSuiteName" ?></span>
+            <span class="collapse_parameter collapse_parameter_passed">Passed: <strong><?php echo "$testPassed" ?></strong></span>
+            <span class="collapse_parameter collapse_parameter_failed">Failed: <strong><?php echo "$testFailed" ?></strong></span>
+            <span class="collapse_parameter"><strong>Total: <?php echo "$total" ?></strong></span>
         </label>
         <div class="collapse_content">
             <table class="table">

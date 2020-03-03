@@ -68,7 +68,6 @@ class FileAdministrator
     private function addTestCase($file) {
         $pathInfo = pathinfo($file);
         $testCase = $pathInfo["dirname"] ."/". $pathInfo["filename"];
-        print($pathInfo["filename"] . "\n");
         if(!array_key_exists($pathInfo["dirname"], $this->testCases))
             $this->testCases[$pathInfo["dirname"]] = array();
         if(preg_match($this->regex, $pathInfo["filename"]) && !in_array($testCase, $this->testCases[$pathInfo["dirname"]]))

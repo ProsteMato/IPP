@@ -63,10 +63,12 @@ class Tester
     private function parserOnly(array $testCases) {
         $tmpFile = tempnam(sys_get_temp_dir(), "xml");
         foreach ($testCases as $testCase) {
-            if ($testCase->runParser($this->parserFile, $tmpFile) == file_get_contents($testCase->getTestCaseRc())) {
+            if (($returnValue = $testCase->runParser($this->parserFile, $tmpFile)) == file_get_contents($testCase->getTestCaseRc()) && $returnValue == 0) {
                 if($testCase->runJExamXml($this->jExamXmlFile, $tmpFile) == 0) {
                     $testCase->setPassed();
                 }
+            } else {
+                $testCase->setPassed();
             }
         }
         unlink($tmpFile);
@@ -76,9 +78,11 @@ class Tester
         $tmpFile = tempnam(sys_get_temp_dir(), "interpret");
         foreach ($testCases as $testCase) {
             $returnValue = $testCase->runInterpret($this->interpretFile, $tmpFile, $testCase->getTestCaseSrc());
-            if($returnValue == file_get_contents($testCase->getTestCaseRc())) {
+            if($returnValue == file_get_contents($testCase->getTestCaseRc()) && $returnValue == 0) {
                 if ($testCase->runDiff() == 0)
                     $testCase->setPassed();
+            } else {
+                $testCase->setPassed();
             }
         }
         unlink($tmpFile);
@@ -90,9 +94,11 @@ class Tester
         foreach ($testCases as $testCase) {
             if ($testCase->runParser($this->parserFile, $tmpXml) == 0) {
                 $returnValue = $testCase->runInterpret($this->interpretFile, $tmpInterpret, $tmpXml);
-                if($returnValue == file_get_contents($testCase->getTestCaseRc())) {
+                if($returnValue == file_get_contents($testCase->getTestCaseRc()) && $returnValue == 0) {
                     if ($testCase->runDiff($tmpInterpret) == 0)
                         $testCase->setPassed();
+                } else {
+                    $testCase->setPassed();
                 }
             }
         }

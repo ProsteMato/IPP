@@ -20,49 +20,33 @@ class TestCase
 
     /**
      * @return string
-     * @throws NotExistingFileException
      * @brief method returns filename with .src extension
      */
     public function getTestCaseSrc() {
-        if(!is_file($this->fileName . ".src")) {
-            throw new NotExistingFileException(basename(__FILE__)."::".__FUNCTION__." - File \"$this->fileName.src\" does not exist!");
-        }
         return $this->fileName . ".src";
     }
 
     /**
      * @return string
-     * @throws NotExistingFileException
      * @brief method returns filename with .in extension
      */
     public function getTestCaseIn() {
-        if(!is_file($this->fileName . ".in")) {
-            throw new NotExistingFileException(basename(__FILE__)."::".__FUNCTION__." - File \"$this->fileName.in\" does not exist!");
-        }
-        return $this->fileName . ".In";
+        return $this->fileName . ".in";
     }
 
     /**
      * @return string
-     * @throws NotExistingFileException
      * @brief method returns filename with .in extension
      */
     public function getTestCaseOut() {
-        if(!is_file($this->fileName . ".out")) {
-            throw new NotExistingFileException(basename(__FILE__)."::".__FUNCTION__." - File \"$this->fileName.out\" does not exist!");
-        }
         return $this->fileName . ".out";
     }
 
     /**
      * @return string
-     * @throws NotExistingFileException
      * @brief method returns filename with .rc extension
      */
     public function getTestCaseRc() {
-        if(!is_file($this->fileName . ".rc")) {
-            throw new NotExistingFileException(basename(__FILE__)."::".__FUNCTION__." - File \"$this->fileName.rc\" does not exist!");
-        }
         return $this->fileName . ".rc";
     }
 

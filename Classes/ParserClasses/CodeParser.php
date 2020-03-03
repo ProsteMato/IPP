@@ -43,7 +43,7 @@ class CodeParser
             $arguments = $this->analysis->argParser($token);
             if (strcmp(mb_strtoupper($token[0]), "LABEL") == 0)
                 $this->checkUniqLabel($arguments[0]->getContent());
-            $this->instruction->setOpCode($token[0]);
+            $this->instruction->setOpCode(strtoupper($token[0]));
             $this->instruction->setArguments($arguments);
             $this->xmlGenerator->generateInstruction($this->instruction, $this->order);
             $token = $this->fileManager->getNextToken();

@@ -25,7 +25,7 @@ class Analysis
     {
         $this->isOpCode($token[0]);
         $this->checkNumOfParameters($token[0], count(array_slice($token, 1)));
-        return $this->checkArguments(array_slice($token, 1), Instructions::INSTRUCTIONS[$token[0]]);
+        return $this->checkArguments(array_slice($token, 1), Instructions::INSTRUCTIONS[strtoupper($token[0])]);
     }
 
     /**
@@ -50,7 +50,7 @@ class Analysis
 
     private function checkNumOfParameters($opCode, $numberOfParameters)
     {
-        if(count(Instructions::INSTRUCTIONS[$opCode]) != $numberOfParameters)
+        if(count(Instructions::INSTRUCTIONS[mb_strtoupper($opCode)]) != $numberOfParameters)
             throw new InvalidArgumentException(basename(__FILE__)."::".__FUNCTION__." - Bad argument count in instruction \"$opCode\"!", Errors::LEX_OR_SYNTAX_ERR);
     }
 

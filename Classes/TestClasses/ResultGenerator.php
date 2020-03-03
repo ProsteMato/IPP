@@ -24,6 +24,7 @@ class ResultGenerator
         $this->htmlGenerator->createHtmlElement();
         $this->htmlGenerator->createHeader();
         $this->htmlGenerator->createElement("body");
+        $this->genTotalResult($testSuites);
         foreach ($testSuites as $testSuiteName => $testSuite) {
             $this->htmlGenerator->generateTestSuite
             (
@@ -34,5 +35,17 @@ class ResultGenerator
         }
         $this->htmlGenerator->endElement("body");
         $this->htmlGenerator->endElement("html");
+    }
+
+    private function genTotalResult($testSuites) {
+        $totalNumberOfTestsCases = 0;
+        $totalPassed = 0;
+        $totalFailed = 0;
+        foreach ($testSuites as $testSuiteName => $testSuite) {
+                $totalPassed += $testSuite->getTestCasesPassCount();
+                $totalFailed += $testSuite->getTestCasesFailCount();
+                $totalNumberOfTestsCases += count($testSuite->getTestCases());
+        }
+        $this->htmlGenerator->generateResultHeader(count($testSuites), $totalNumberOfTestsCases, $totalPassed, $totalFailed);
     }
 }
