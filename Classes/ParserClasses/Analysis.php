@@ -11,6 +11,10 @@ class Analysis
 {
     private Stats $stats;
 
+    /**
+     * Analysis constructor.
+     * @param Stats $stats
+     */
     public function __construct(Stats $stats)
     {
         $this->stats = $stats;

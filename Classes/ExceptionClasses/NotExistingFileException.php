@@ -1,7 +1,7 @@
 <?php
 
 
-class NotExistingFileException extends Exception
+class NotExistingFileException extends FileException
 {
 
 }

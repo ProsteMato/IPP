@@ -12,7 +12,12 @@ class TestSuite
     private string $dirName;
     private array $testCases;
 
-    public function __construct($testCases, $dirName)
+    /**
+     * TestSuite constructor.
+     * @param array $testCases  array of test cases.
+     * @param string $dirName   Test Suite name.
+     */
+    public function __construct(array $testCases, string $dirName)
     {
         $this->dirName = $dirName;
         $this->testCases = $testCases;
@@ -40,6 +45,23 @@ class TestSuite
             }
             if (!is_file($testCase->getTestCaseRc())) {
                 file_put_contents($testCase->getTestCaseRc(), "0");
+            }
+        }
+    }
+
+    public function checkReadability() {
+        foreach ($this->testCases as $testCase) {
+            if (!is_readable($testCase->getTestCaseOut())) {
+                throw new PermissionException(basename(__FILE__)."::".__FUNCTION__."File \"{$testCase->getTestCaseOut()}\" is not readable!");
+            }
+            if (!is_readable($testCase->getTestCaseIn())) {
+                throw new PermissionException(basename(__FILE__)."::".__FUNCTION__."File \"{$testCase->getTestCaseIn()}\" is not readable!");
+            }
+            if (!is_readable($testCase->getTestCaseRc())) {
+                throw new PermissionException(basename(__FILE__)."::".__FUNCTION__."File \"{$testCase->getTestCaseRc()}\" is not readable!");
+            }
+            if (!is_readable($testCase->getTestCaseSrc())) {
+                throw new PermissionException(basename(__FILE__)."::".__FUNCTION__."File \"{$testCase->getTestCaseSrc()}\" is not readable!");
             }
         }
     }

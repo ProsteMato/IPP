@@ -14,6 +14,9 @@ class Stats
     private int $labels;
     private int $jumps;
 
+    /**
+     * Stats constructor.
+     */
     public function __construct()
     {
         $this->loc = 0;
@@ -52,10 +55,14 @@ class Stats
 
     /**
      * @param $parsedArguments  array information where and what to generate
+     * @throws PermissionException
      * @brief   This function generates the statistics about src input file.
      */
     public function generateStats($parsedArguments)
     {
+        if (!is_writable($parsedArguments["stats"])) {
+            throw new PermissionException(basename(__FILE__)."::".__FUNCTION__."File \"{$parsedArguments["stats"]}\" is not readable!");
+        }
         $file = fopen($parsedArguments["stats"], "w");
         $arguments = $this->arguments2Array($parsedArguments);
         if ($file) {

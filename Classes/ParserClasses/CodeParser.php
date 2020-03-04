@@ -17,6 +17,14 @@ class CodeParser
     private array $labels;
     private int $order;
 
+    /**
+     * CodeParser constructor.
+     * @param Analysis $analysis    instance of class analysis
+     * @param XmlGenerator $xmlGenerator instance of class XmlGenerator
+     * @param FileManager $fileManager instance of class FileManager
+     * @param Instruction $instruction instance of class instruction
+     * @param Stats $stats instance of class stats
+     */
     public function __construct(Analysis $analysis, XmlGenerator $xmlGenerator, FileManager $fileManager, Instruction $instruction, Stats $stats)
     {
         $this->analysis = $analysis;

@@ -57,6 +57,7 @@ class Errors
     const LEX_OR_SYNTAX_ERR = 23;
     const ERR_OK = 0;
     const NON_EXISTING_FILE = 11;
+    const PERMISSION_FILE_ERROR = 12;
     const INTERNAL_ERROR = 99;
 }
 

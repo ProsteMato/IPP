@@ -12,6 +12,9 @@ class HtmlGenerator
 
     private int $id;
 
+    /**
+     * HtmlGenerator constructor.
+     */
     public function __construct()
     {
         $this->id = 0;

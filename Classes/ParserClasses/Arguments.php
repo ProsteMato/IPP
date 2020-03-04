@@ -12,6 +12,11 @@ class Arguments
     private string $type;
     private string $content;
 
+    /**
+     * Arguments constructor.
+     * @param string $type type of argument
+     * @param string $content content of the argument
+     */
     public function __construct(string $type, string $content)
     {
         $this->type = $type;

@@ -12,6 +12,9 @@ class Instruction
     private string $opCode;
     private array $arguments;
 
+    /**
+     * Instruction constructor.
+     */
     public function __construct()
     {
         $this->opCode = "";

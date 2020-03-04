@@ -11,6 +11,9 @@ class ResultGenerator
 {
     private HtmlGenerator $htmlGenerator;
 
+    /**
+     * ResultGenerator constructor.
+     */
     public function __construct()
     {
         $this->htmlGenerator = new HtmlGenerator();

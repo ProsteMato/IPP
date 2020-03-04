@@ -18,6 +18,9 @@ class ArgParser
     private array $repeatableArguments;
     private int $order;
 
+    /**
+     * ArgParser constructor. Initialized the needed arrays and set help as a implicit argument.
+     */
     public function __construct()
     {
         $this->longOptions = array();

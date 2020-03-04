@@ -12,7 +12,11 @@ class TestCase
     private string $fileName;
     private bool $passed;
 
-    public function __construct($fileName)
+    /**
+     * TestCase constructor.
+     * @param string $fileName fileName is name for the given testCase.
+     */
+    public function __construct(string $fileName)
     {
         $this->fileName = $fileName;
         $this->passed = false;
@@ -78,13 +82,12 @@ class TestCase
      * @param string $file path to parser.php
      * @param string $tmpFile filename of tmpFile
      * @return int  return value from parser.
-     * @throws NotExistingFileException
      * @brief run test in parser.php script.
      */
     public function runParser($file, $tmpFile) {
         $returnValue = 0;
         system(
-            "php7.4 $file < {$this->getTestCaseSrc()} > $tmpFile",
+            "php7.4 \"$file\" < \"{$this->getTestCaseSrc()}\" > \"$tmpFile\"",
             $returnValue
         );
         return $returnValue;
@@ -94,14 +97,13 @@ class TestCase
      * @param string $file path to jexamxml
      * @param string $tmpFile filename of tmp result from parser
      * @return int  return value from jexamxml.
-     * @throws NotExistingFileException
      * @brief run JExamXml comparison on Test Case output file and tmpFile
      */
     public function runJExamXml($file, $tmpFile) {
         $returnValue = 0;
         $tmpDiff = tempnam(sys_get_temp_dir(), "diff");
         system(
-            "java -jar $file {$this->getTestCaseOut()} $tmpFile $tmpDiff \D ".dirname($file)."/options > /dev/null",
+            "java -jar \"$file\" \"{$this->getTestCaseOut()}\" \"$tmpFile\" \"$tmpDiff\" \D \"".dirname($file)."/options\" > /dev/null",
             $returnValue
         );
         unlink($tmpDiff);
@@ -113,13 +115,12 @@ class TestCase
      * @param string $tmpFile tmpFile result from interpreter.py
      * @param string $source  input file from parser or .src file from test case
      * @return int return value from interpreter.py
-     * @throws NotExistingFileException
      * @brief run test in interpreter.py script.
      */
     public function runInterpret($file, $tmpFile, $source) {
         $returnValue = 0;
         system(
-            "python3 $file --source=$source --input={$this->getTestCaseIn()} > $tmpFile",
+            "python3 \"$file\" --source=\"$source\" --input=\"{$this->getTestCaseIn()}\" > \"$tmpFile\"",
             $returnValue
         );
         return $returnValue;
@@ -128,13 +129,12 @@ class TestCase
     /**
      * @param string $tmpFile filename of file where result of interpreter.py is.
      * @return int return value from diff
-     * @throws NotExistingFileException
      * @brief run diff on $tmpFile and Test Case .out file.
      */
     public function runDiff($tmpFile) {
         $returnValue = 0;
         system(
-            "diff $tmpFile {$this->getTestCaseOut()} > /dev/null",
+            "diff \"$tmpFile\" \"{$this->getTestCaseOut()}\" > /dev/null",
             $returnValue
         );
         return $returnValue;

@@ -15,6 +15,7 @@ require_once "./Classes/ParserClasses/Stats.php";
 require_once "./Classes/ParserClasses/XmlGenerator.php";
 require_once "./Classes/ParserClasses/CodeParser.php";
 require_once "./Classes/TestClasses/ArgParser.php";
+require_once "./Classes/ExceptionClasses/FileException.php";
 require_once "./Classes/ExceptionClasses/InvalidInstructionException.php";
 require_once "./Classes/ExceptionClasses/InvalidHeaderException.php";
 require_once "./Classes/ExceptionClasses/ArgumentException.php";
@@ -26,6 +27,9 @@ require_once "./Classes/ExceptionClasses/RedefinitionOfArgumentException.php";
 require_once "./Classes/ExceptionClasses/RequiredValueException.php";
 
 
+/**
+ * @brief function prints help argument for parser.php
+ */
 function printHelp() {
     echo PARSER_HELP;
     exit(Errors::ERR_OK);
@@ -66,4 +70,7 @@ try {
 } catch (InternalException $e) {
     error_log($e->getMessage());
     exit(Errors::INTERNAL_ERROR);
+} catch (FileException $e) {
+    error_log($e->getMessage());
+    exit(Errors::PERMISSION_FILE_ERROR);
 }

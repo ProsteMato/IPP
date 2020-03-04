@@ -13,6 +13,7 @@ require_once "./Classes/constants.php";
 require_once "./Classes/TestClasses/HtmlGenerator.php";
 require_once "./Classes/TestClasses/ResultGenerator.php";
 require_once "./Classes/TestClasses/Tester.php";
+require_once "./Classes/ExceptionClasses/FileException.php";
 require_once "./Classes/ExceptionClasses/InternalException.php";
 require_once "./Classes/ExceptionClasses/ArgumentException.php";
 require_once "./Classes/ExceptionClasses/NotExistingFileException.php";
@@ -22,8 +23,11 @@ require_once "./Classes/ExceptionClasses/RequiredValueException.php";
 require_once "./Classes/ExceptionClasses/UndefinedArgumentException.php";
 require_once "./Classes/ExceptionClasses/NotInstanceOfException.php";
 require_once "./Classes/TestClasses/ArgParser.php";
+require_once "./Classes/ExceptionClasses/PermissionException.php";
 
-
+/**
+ * @brief function prints help argument for test.php
+ */
 function printHelp() {
     echo TEST_HELP;
     exit(Errors::ERR_OK);
@@ -53,7 +57,7 @@ try {
     $tester->runTests($testSuite);
     $results = new ResultGenerator();
     $results->generateResults($testSuite);
-} catch (NotExistingFileException $e) {
+} catch (FileException $e) {
     error_log($e->getMessage());
     exit(Errors::NON_EXISTING_FILE);
 } catch (ArgumentException $e) {
