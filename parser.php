@@ -6,25 +6,25 @@
  * @brief   This script will parse IPPcode20 src files to XML representation.
  */
 
-require_once "./Classes/ParserClasses/Analysis.php";
-require_once "./Classes/ParserClasses/Arguments.php";
-require_once "./Classes/constants.php";
-require_once "./Classes/ParserClasses/FileManager.php";
-require_once "./Classes/ParserClasses/Instruction.php";
-require_once "./Classes/ParserClasses/Stats.php";
-require_once "./Classes/ParserClasses/XmlGenerator.php";
-require_once "./Classes/ParserClasses/CodeParser.php";
-require_once "./Classes/TestClasses/ArgParser.php";
-require_once "./Classes/ExceptionClasses/FileException.php";
-require_once "./Classes/ExceptionClasses/InvalidInstructionException.php";
-require_once "./Classes/ExceptionClasses/InvalidHeaderException.php";
-require_once "./Classes/ExceptionClasses/ArgumentException.php";
-require_once "./Classes/ExceptionClasses/InternalException.php";
-require_once "./Classes/ExceptionClasses/BadArgumentCombinationException.php";
-require_once "./Classes/ExceptionClasses/InternalRedefinitionOfArgumentException.php";
-require_once "./Classes/ExceptionClasses/UndefinedArgumentException.php";
-require_once "./Classes/ExceptionClasses/RedefinitionOfArgumentException.php";
-require_once "./Classes/ExceptionClasses/RequiredValueException.php";
+require_once __DIR__."/Classes/ParserClasses/Analysis.php";
+require_once __DIR__."/Classes/ParserClasses/Arguments.php";
+require_once __DIR__."/Classes/constants.php";
+require_once __DIR__."/Classes/ParserClasses/FileManager.php";
+require_once __DIR__."/Classes/ParserClasses/Instruction.php";
+require_once __DIR__."/Classes/ParserClasses/Stats.php";
+require_once __DIR__."/Classes/ParserClasses/XmlGenerator.php";
+require_once __DIR__."/Classes/ParserClasses/CodeParser.php";
+require_once __DIR__."/Classes/TestClasses/ArgParser.php";
+require_once __DIR__."/Classes/ExceptionClasses/FileException.php";
+require_once __DIR__."/Classes/ExceptionClasses/InvalidInstructionException.php";
+require_once __DIR__."/Classes/ExceptionClasses/InvalidHeaderException.php";
+require_once __DIR__."/Classes/ExceptionClasses/ArgumentException.php";
+require_once __DIR__."/Classes/ExceptionClasses/InternalException.php";
+require_once __DIR__."/Classes/ExceptionClasses/BadArgumentCombinationException.php";
+require_once __DIR__."/Classes/ExceptionClasses/InternalRedefinitionOfArgumentException.php";
+require_once __DIR__."/Classes/ExceptionClasses/UndefinedArgumentException.php";
+require_once __DIR__."/Classes/ExceptionClasses/RedefinitionOfArgumentException.php";
+require_once __DIR__."/Classes/ExceptionClasses/RequiredValueException.php";
 
 
 /**

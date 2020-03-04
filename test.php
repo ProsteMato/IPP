@@ -6,24 +6,24 @@
  * @brief   This script is testing input testing files and generating results to HTML document.
  */
 
-require_once "./Classes/TestClasses/FileAdministrator.php";
-require_once "./Classes/TestClasses/TestCase.php";
-require_once "./Classes/TestClasses/TestSuite.php";
-require_once "./Classes/constants.php";
-require_once "./Classes/TestClasses/HtmlGenerator.php";
-require_once "./Classes/TestClasses/ResultGenerator.php";
-require_once "./Classes/TestClasses/Tester.php";
-require_once "./Classes/ExceptionClasses/FileException.php";
-require_once "./Classes/ExceptionClasses/InternalException.php";
-require_once "./Classes/ExceptionClasses/ArgumentException.php";
-require_once "./Classes/ExceptionClasses/NotExistingFileException.php";
-require_once "./Classes/ExceptionClasses/BadArgumentCombinationException.php";
-require_once "./Classes/ExceptionClasses/RedefinitionOfArgumentException.php";
-require_once "./Classes/ExceptionClasses/RequiredValueException.php";
-require_once "./Classes/ExceptionClasses/UndefinedArgumentException.php";
-require_once "./Classes/ExceptionClasses/NotInstanceOfException.php";
-require_once "./Classes/TestClasses/ArgParser.php";
-require_once "./Classes/ExceptionClasses/PermissionException.php";
+require_once __DIR__."/Classes/TestClasses/FileAdministrator.php";
+require_once __DIR__."/Classes/TestClasses/TestCase.php";
+require_once __DIR__."/Classes/TestClasses/TestSuite.php";
+require_once __DIR__."/Classes/constants.php";
+require_once __DIR__."/Classes/TestClasses/HtmlGenerator.php";
+require_once __DIR__."/Classes/TestClasses/ResultGenerator.php";
+require_once __DIR__."/Classes/TestClasses/Tester.php";
+require_once __DIR__."/Classes/ExceptionClasses/FileException.php";
+require_once __DIR__."/Classes/ExceptionClasses/InternalException.php";
+require_once __DIR__."/Classes/ExceptionClasses/ArgumentException.php";
+require_once __DIR__."/Classes/ExceptionClasses/NotExistingFileException.php";
+require_once __DIR__."/Classes/ExceptionClasses/BadArgumentCombinationException.php";
+require_once __DIR__."/Classes/ExceptionClasses/RedefinitionOfArgumentException.php";
+require_once __DIR__."/Classes/ExceptionClasses/RequiredValueException.php";
+require_once __DIR__."/Classes/ExceptionClasses/UndefinedArgumentException.php";
+require_once __DIR__."/Classes/ExceptionClasses/NotInstanceOfException.php";
+require_once __DIR__."/Classes/TestClasses/ArgParser.php";
+require_once __DIR__."/Classes/ExceptionClasses/PermissionException.php";
 
 /**
  * @brief function prints help argument for test.php
