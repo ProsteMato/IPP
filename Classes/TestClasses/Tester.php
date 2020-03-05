@@ -23,7 +23,7 @@ class Tester
      * Tester constructor.
      * @param bool $parseOnly   if true sets mode for only parser testing cant combine with intOnly
      * @param bool $intOnly     if true sets mode for only interpret testing cant combine with parseOnly
-     * @param string $parserFile    path to parser.php script
+     * @param string $parserFile    path to parse.php script
      * @param string $interpretFile path to interpret.php script
      * @param string $jExamXmlFile  path to jexamxml.jar file
      * @throws BadArgumentCombinationException
@@ -42,6 +42,7 @@ class Tester
         $this->parserFile = $parserFile;
         $this->interpretFile = $interpretFile;
         $this->jExamXmlFile = $jExamXmlFile;
+        $this->returnValue = 0;
     }
 
     /**
@@ -75,18 +76,19 @@ class Tester
 
     private function runParser(TestCase $testCase,string $tmpFile){
         $this->returnValue = $testCase->runParser($this->parserFile, $tmpFile);
-        return $this->returnValue == file_get_contents($testCase->getTestCaseRc());
+        return (int)($this->returnValue == file_get_contents($testCase->getTestCaseRc()));
     }
 
     private function parserOnly(array $testCases) {
         $tmpFile = tempnam(sys_get_temp_dir(), "xml");
         foreach ($testCases as $testCase) {
-            if ($this->runParser($testCase, $tmpFile) && $this->returnValue == 0) {
+            $hasPassed = $this->runParser($testCase, $tmpFile);
+            if ($hasPassed && $this->returnValue != 0) {
+                $testCase->setPassed();
+            } else if ($hasPassed && $this->returnValue == 0) {
                 if ($testCase->runJExamXml($this->jExamXmlFile, $tmpFile) == 0) {
                     $testCase->setPassed();
                 }
-            } else {
-                $testCase->setPassed();
             }
         }
         unlink($tmpFile);
@@ -95,17 +97,18 @@ class Tester
     private function runInterpret(TestCase $testCase, string $tmpInterpretOut, string $tmpInterpretIn = "") {
         $tmpXml = ($tmpInterpretIn == "") ? $testCase->getTestCaseSrc() : $tmpInterpretIn;
         $this->returnValue = $testCase->runInterpret($this->interpretFile, $tmpInterpretOut, $tmpXml);
-        return $this->returnValue == file_get_contents($testCase->getTestCaseRc());
+        return (int)($this->returnValue == file_get_contents($testCase->getTestCaseRc()));
     }
 
     private function interpretOnly(array $testCases) {
         $tmpFile = tempnam(sys_get_temp_dir(), "interpret");
         foreach ($testCases as $testCase) {
-            if ($this->runInterpret($testCase, $tmpFile) && $this->returnValue == 0) {
+            $hasPassed = $this->runInterpret($testCase, $tmpFile);
+            if ($hasPassed && $this->returnValue != 0) {
+                $testCase->setPassed();
+            } else if ($hasPassed && $this->returnValue == 0) {
                 if ($testCase->runDiff() == 0)
                     $testCase->setPassed();
-            } else {
-                $testCase->setPassed();
             }
         }
         unlink($tmpFile);
@@ -116,11 +119,12 @@ class Tester
         $tmpInterpret = tempnam(sys_get_temp_dir(), "interpret");
         foreach ($testCases as $testCase) {
             if ($testCase->runParser($this->parserFile, $tmpXml) == 0) {
-                if ($this->runInterpret($testCase, $tmpInterpret, $tmpXml) && $this->returnValue == 0) {
+                $hasPassed = $this->runInterpret($testCase, $tmpInterpret, $tmpXml);
+                if ($hasPassed && $this->returnValue != 0) {
+                    $testCase->setPassed();
+                } else if ($hasPassed && $this->returnValue == 0) {
                     if ($testCase->runDiff($tmpInterpret) == 0)
                         $testCase->setPassed();
-                } else {
-                    $testCase->setPassed();
                 }
             }
         }

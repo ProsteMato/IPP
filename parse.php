@@ -1,6 +1,6 @@
 <?php
 /**
- * @file    parser.php
+ * @file    parse.php
  * @date    1.3.2020
  * @author  Martin Koči (xkocim05@stud.fit.vutbr.cz)
  * @brief   This script will parse IPPcode20 src files to XML representation.
@@ -28,7 +28,7 @@ require_once __DIR__."/Classes/ExceptionClasses/RequiredValueException.php";
 
 
 /**
- * @brief function prints help argument for parser.php
+ * @brief function prints help argument for parse.php
  */
 function printHelp() {
     echo PARSER_HELP;
@@ -60,10 +60,10 @@ try {
     exit(Errors::LEX_OR_SYNTAX_ERR);
 } catch (InvalidHeaderException $e) {
     error_log($e->getMessage());
-    exit(Errors::INSTRUCTION_ERR);
+    exit(Errors::HEADER_ERR);
 } catch (InvalidInstructionException $e) {
     error_log($e->getMessage());
-    exit(Errors::HEADER_ERR);
+    exit(Errors::INSTRUCTION_ERR);
 } catch (ArgumentException $e) {
     error_log($e->getMessage());
     exit(Errors::BAD_ARGUMENT);

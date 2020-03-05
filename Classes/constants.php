@@ -30,7 +30,7 @@ class Instructions
         "OR" => [Types::VARIABLE, Types::SYMBOL, Types::SYMBOL],
         "NOT" => [Types::VARIABLE, Types::SYMBOL],
         "INT2CHAR" => [Types::VARIABLE, Types::SYMBOL],
-        "STR2INT" => [Types::VARIABLE, Types::SYMBOL, Types::SYMBOL],
+        "STRI2INT" => [Types::VARIABLE, Types::SYMBOL, Types::SYMBOL],
         "READ" => [Types::VARIABLE, Types::TYPE],
         "WRITE" => [Types::SYMBOL],
         "CONCAT" => [Types::VARIABLE, Types::SYMBOL, Types::SYMBOL],
@@ -63,10 +63,10 @@ class Errors
 
 class Types
 {
-    const VARIABLE = "var";
-    const LABEL = "label";
-    const SYMBOL = "var";
-    const TYPE = "type";
+    const VARIABLE = 1;
+    const LABEL = 2;
+    const SYMBOL = 3;
+    const TYPE = 4;
 }
 
 class Regex
@@ -86,7 +86,7 @@ class Regex
     const SYMBOL = "(". self::CONST . "|" . self::VARIABLE . ")";
 }
 
-const PARSER_HELP = 'Script or filter (parser.php in programming language PHP 7.4) loads from standard input source code
+const PARSER_HELP = 'Script or filter (parse.php in programming language PHP 7.4) loads from standard input source code
 in IPPcode20, checks for lexical and syntax error and writes on standard output XML representation of given program
 
 Input Arguments:
@@ -131,13 +131,13 @@ Input Arguments:
     --recursive         With this argument test will be from given 
                         directory and all of is sub directories recursively.
                         
-    --parse-script=file File with script parser.php if this argument is 
+    --parse-script=file File with script parse.php if this argument is 
                         missing default value is in current directory.
                         
     --int-script=file   File with script interpreter.py if this argument 
                         is missing default value is in current directory.
                         
-    --parse-only        Tests will be tested only on script parser.php
+    --parse-only        Tests will be tested only on script parse.php
                         Invalid combinations with arguments int-script and int-only
                         
     --int-only          Tests will be tested only on script interpreter.py.

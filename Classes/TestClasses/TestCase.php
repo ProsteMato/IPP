@@ -79,10 +79,10 @@ class TestCase
     }
 
     /**
-     * @param string $file path to parser.php
+     * @param string $file path to parse.php
      * @param string $tmpFile filename of tmpFile
      * @return int  return value from parser.
-     * @brief run test in parser.php script.
+     * @brief run test in parse.php script.
      */
     public function runParser($file, $tmpFile) {
         $returnValue = 0;

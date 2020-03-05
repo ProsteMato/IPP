@@ -38,7 +38,7 @@ try {
         ->addArgument("parse-only", false, false, array("int-only", "int-script"))
         ->addArgument("int-only", false, false, array("parse-only", "parse-script"))
         ->addArgument("jexamxml", true, "/pub/courses/ipp/jexamxml/jexamxml.jar")
-        ->addArgument("parse-script", true, "./parser.php")
+        ->addArgument("parse-script", true, "./parse.php")
         ->addArgument("int-script", true, "./interpret.py")
         ->addArgument("directory", true, "./", array("testlist"))
         ->addArgument("recursive", false, false)

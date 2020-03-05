@@ -62,7 +62,7 @@ class Analysis
     {
         $opCode = mb_strtoupper($opCode);
         if(!array_key_exists($opCode, Instructions::INSTRUCTIONS))
-            throw new InvalidInstructionException(basename(__FILE__)."::".__FUNCTION__." - OpCode \"$opCode\" is undefined!", Errors::INSTRUCTION_ERR);
+            throw new InvalidInstructionException(basename(__FILE__)."::".__FUNCTION__." - OpCode \"$opCode\" is undefined!");
         $this->statsJumpsIncrementation($opCode);
     }
 
@@ -79,22 +79,22 @@ class Analysis
 
     private function isVariable($variable)
     {
-        return preg_match("/^" . Regex::VARIABLE . "/", $variable);
+        return preg_match("/^" . Regex::VARIABLE . "$/", $variable);
     }
 
     private function isSymbol($symbol)
     {
-        return preg_match("/^" . Regex::SYMBOL . "/", $symbol);
+        return preg_match("/^" . Regex::SYMBOL . "$/", $symbol);
     }
 
     private function isLabel($label)
     {
-        return preg_match("/^" . Regex::LABEL . "/", $label);
+        return preg_match("/^" . Regex::LABEL . "$/", $label);
     }
 
     private function isType($type)
     {
-        return preg_match("/^" . Regex::TYPE . "/", $type);
+        return preg_match("/^" . Regex::TYPE . "$/", $type);
     }
 
     private function checkArguments($givenArguments, $requiredArguments)
@@ -114,9 +114,13 @@ class Analysis
                     }
                     break;
                 case Types::TYPE:
+                    array_push($arguments, new Arguments("type", $givenArguments[$index]));
+                    break;
                 case Types::VARIABLE:
+                    array_push($arguments, new Arguments("var", $givenArguments[$index]));
+                    break;
                 case Types::LABEL:
-                    array_push($arguments, new Arguments($requiredArguments[$index], $givenArguments[$index]));
+                    array_push($arguments, new Arguments("label", $givenArguments[$index]));
                     break;
             }
         }
