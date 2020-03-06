@@ -9,11 +9,13 @@
  */
 class Tester
 {
-    private int $mode;
-    private string $parserFile;
+    private TestCase $actualTestCase;
     private string $interpretFile;
     private string $jExamXmlFile;
+    private string $parserFile;
+    private string $tmpFile;
     private int $returnValue;
+    private int $mode;
 
     private const PARSE_ONLY = 1;
     private const INT_ONLY = 2;
@@ -43,6 +45,12 @@ class Tester
         $this->interpretFile = $interpretFile;
         $this->jExamXmlFile = $jExamXmlFile;
         $this->returnValue = 0;
+        $this->tmpFile = tempnam(sys_get_temp_dir(), "tmpFile");
+    }
+
+    public function __destruct()
+    {
+        unlink($this->tmpFile);
     }
 
     /**
@@ -74,62 +82,73 @@ class Tester
         }
     }
 
-    private function runParser(TestCase $testCase,string $tmpFile){
-        $this->returnValue = $testCase->runParser($this->parserFile, $tmpFile);
-        return (int)($this->returnValue == file_get_contents($testCase->getTestCaseRc()));
+    private function compareOutputs(callable $compareFunc) {
+        if ($this->returnValue == 0) {
+            if (call_user_func($compareFunc) == 0)
+                $this->actualTestCase->setPassed();
+        } else {
+            $this->actualTestCase->setPassed();
+        }
     }
 
     private function parserOnly(array $testCases) {
-        $tmpFile = tempnam(sys_get_temp_dir(), "xml");
-        foreach ($testCases as $testCase) {
-            $hasPassed = $this->runParser($testCase, $tmpFile);
-            if ($hasPassed && $this->returnValue != 0) {
-                $testCase->setPassed();
-            } else if ($hasPassed && $this->returnValue == 0) {
-                if ($testCase->runJExamXml($this->jExamXmlFile, $tmpFile) == 0) {
-                    $testCase->setPassed();
-                }
+        foreach ($testCases as $this->actualTestCase) {
+            if ($this->runParser()) {
+                $this->compareOutputs(array($this, 'runJExamXml'));
             }
         }
-        unlink($tmpFile);
-    }
-
-    private function runInterpret(TestCase $testCase, string $tmpInterpretOut, string $tmpInterpretIn = "") {
-        $tmpXml = ($tmpInterpretIn == "") ? $testCase->getTestCaseSrc() : $tmpInterpretIn;
-        $this->returnValue = $testCase->runInterpret($this->interpretFile, $tmpInterpretOut, $tmpXml);
-        return (int)($this->returnValue == file_get_contents($testCase->getTestCaseRc()));
     }
 
     private function interpretOnly(array $testCases) {
-        $tmpFile = tempnam(sys_get_temp_dir(), "interpret");
-        foreach ($testCases as $testCase) {
-            $hasPassed = $this->runInterpret($testCase, $tmpFile);
-            if ($hasPassed && $this->returnValue != 0) {
-                $testCase->setPassed();
-            } else if ($hasPassed && $this->returnValue == 0) {
-                if ($testCase->runDiff() == 0)
-                    $testCase->setPassed();
+        foreach ($testCases as $this->actualTestCase) {
+            if($this->runInterpret($this->actualTestCase->getTestCaseSrc())) {
+                $this->compareOutputs(array($this, "runDiff"));
             }
         }
-        unlink($tmpFile);
     }
 
     private function both(array $testCases) {
-        $tmpXml = tempnam(sys_get_temp_dir(), "xml");
-        $tmpInterpret = tempnam(sys_get_temp_dir(), "interpret");
-        foreach ($testCases as $testCase) {
-            if ($testCase->runParser($this->parserFile, $tmpXml) == 0) {
-                $hasPassed = $this->runInterpret($testCase, $tmpInterpret, $tmpXml);
-                if ($hasPassed && $this->returnValue != 0) {
-                    $testCase->setPassed();
-                } else if ($hasPassed && $this->returnValue == 0) {
-                    if ($testCase->runDiff($tmpInterpret) == 0)
-                        $testCase->setPassed();
+        foreach ($testCases as $this->actualTestCase) {
+            if ($this->runParser() == 0) {
+                if($this->runInterpret($this->tmpFile)) {
+                    $this->compareOutputs(array($this, "runDiff"));
                 }
             }
         }
-        unlink($tmpXml);
-        unlink($tmpInterpret);
+    }
+
+    private function runParser() {
+        system(
+            "php7.4 \"$this->parserFile\" < \"{$this->actualTestCase->getTestCaseSrc()}\" > \"$this->tmpFile\"",
+            $this->returnValue
+        );
+        return $this->returnValue == file_get_contents($this->actualTestCase->getTestCaseRc());
+    }
+
+    private function runInterpret($source) {
+        system(
+            "python3 \"$this->interpretFile\" --source=\"$source\" --input=\"{$this->actualTestCase->getTestCaseIn()}\" | tee \"$this->tmpFile\" > /dev/null",
+            $this->returnValue
+        );
+        return $this->returnValue == file_get_contents($this->actualTestCase->getTestCaseRc());
+    }
+
+    private function runJExamXml() {
+        $tmpDiff = tempnam(sys_get_temp_dir(), "diff");
+        system(
+            "java -jar \"$this->jExamXmlFile\" \"{$this->actualTestCase->getTestCaseOut()}\" \"$this->tmpFile\" \"$tmpDiff\" \D \"".dirname($this->jExamXmlFile)."/options\" > /dev/null",
+            $this->returnValue
+        );
+        unlink($tmpDiff);
+        return $this->returnValue;
+    }
+
+    private function runDiff() {
+        system(
+            "diff \"$this->tmpFile\" \"{$this->actualTestCase->getTestCaseOut()}\" > /dev/null",
+            $this->returnValue
+        );
+        return $this->returnValue;
     }
 
     private function checkFiles() {
