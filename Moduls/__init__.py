@@ -1,1 +1,1 @@
-from .Const import Const
+import Moduls.Const as Const

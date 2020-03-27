@@ -1,9 +1,19 @@
 from Moduls.XmlParser import XmlParser
-from Moduls.Argument import Argument
+import Moduls.Const as Const
+from Moduls.Program import Program
+import xml.etree.ElementTree as elementTree
 import sys
 
-xmlParser = XmlParser("./Tests/int-only/stack_test.src")
-instructions = xmlParser.parse()
-print(instructions)
 
+try:
+    program = Program()
+    xmlParser = XmlParser("./Tests/int-only/stack_test.src", program)
+    instructions = xmlParser.parse()
+    program.run_program(instructions)
+except elementTree.ParseError:
+    print("Invalid XML!", file=sys.stderr)
+    sys.exit(Const.INVALID_XML_ERROR)
+except Const.InvalidXmlException:
+    print("lex error", file=sys.stderr)
+    sys.exit(Const.LEX_SYNTAX_ERROR)
 sys.exit(0)

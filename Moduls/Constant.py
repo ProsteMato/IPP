@@ -1,17 +1,11 @@
-from .Argument import Argument
-from .Const import Const
+from .Symbol import Symbol
+import Moduls.Const as Const
 
 
-class Constant(Argument):
+class Constant(Symbol):
 
     def __init__(self, content, type_t):
         if not Const.CONST_REGEX.match(type_t + "@" + content):
-            raise Exception
-        self.__content = content
-        self.__type_t = type_t
-
-    def get_content(self):
-        return self.__content
-
-    def get_type(self):
-        return self.__type_t
+            raise Const.InvalidXmlException
+        self.content = content
+        self.type = type_t
