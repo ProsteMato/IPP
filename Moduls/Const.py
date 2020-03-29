@@ -52,7 +52,7 @@ TYPES = {
     'type': 'TypeT'
 }
 
-__STRING = r"string@(([^\s\\#]|\d{3})+|$)"
+__STRING = r'string@(([^\s\\#]|\\\d{3})+|$)'
 __INT = r"int@(\+|\-)?\d+"
 __BOOL = r"bool@(true|false)"
 __NIL = r"nil@nil"

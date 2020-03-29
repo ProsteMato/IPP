@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <program language="IPPcode20" name="Stack test">
     <instruction order="1" opcode="PUSHS">
-        <arg1 type="string">světe</arg1>
+        <arg1 type="string">světe\010</arg1>
     </instruction>
     <instruction order="2" opcode="PUSHS">
         <arg1 type="int">32</arg1>

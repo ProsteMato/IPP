@@ -1,3 +1,4 @@
+import sys
 from .Variable import Variable
 from .Constant import Constant
 from .Label import Label
@@ -7,7 +8,8 @@ from .Const import InvalidXmlException, INSTRUCTIONS
 
 class Instruction:
 
-    def __init__(self, program, op_code, arguments):
+    def __init__(self, program, order, op_code, arguments):
+        self.order = order
         self.op_code = op_code
         self.arguments = arguments
         self.program = program
@@ -36,7 +38,7 @@ class Instruction:
     def load_symbol(self, symbol):
         if isinstance(symbol, Variable):
             return self.load_from_variable(symbol)
-        else:
+        elif isinstance(symbol, Constant):
             return {"value": symbol.content, "type": symbol.type}
 
     def load_from_variable(self, var):
@@ -99,7 +101,7 @@ class Instruction:
         if content["type"] != "int":
             raise Exception # error 58
         try:
-            self.store_to_variable(argument1, {"value": chr(int(content["value"])), "type": "string"})
+            self.store_to_variable(argument1, {"value": chr(content["value"]), "type": "string"})
         except ValueError:
             raise Exception  # error 58
 
@@ -133,6 +135,245 @@ class Instruction:
         elif argument1.scope == "TF":
             self.program.TF[-1][argument1.name] = None
 
+    def ADD(self):
+        symbol1 = self.load_symbol(self.arguments["arg2"])
+        symbol2 = self.load_symbol(self.arguments["arg3"])
+
+        if symbol1["type"] != "int" or symbol2["type"] != "int":
+            raise Exception  # error 53
+
+        self.store_to_variable(self.arguments["arg1"], {"value": symbol1["value"] + symbol2["value"], "type": "int"})
+
+    def SUB(self):
+        symbol1 = self.load_symbol(self.arguments["arg2"])
+        symbol2 = self.load_symbol(self.arguments["arg3"])
+
+        if symbol1["type"] != "int" or symbol2["type"] != "int":
+            raise Exception  # error 53
+
+        self.store_to_variable(self.arguments["arg1"], {"value": symbol1["value"] - symbol2["value"], "type": "int"})
+
+    def MUL(self):
+        symbol1 = self.load_symbol(self.arguments["arg2"])
+        symbol2 = self.load_symbol(self.arguments["arg3"])
+
+        if symbol1["type"] != "int" or symbol2["type"] != "int":
+            raise Exception  # error 53
+
+        self.store_to_variable(self.arguments["arg1"], {"value": symbol1["value"] * symbol2["value"], "type": "int"})
+
+    def IDIV(self):
+        symbol1 = self.load_symbol(self.arguments["arg2"])
+        symbol2 = self.load_symbol(self.arguments["arg3"])
+
+        if symbol1["type"] != "int" or symbol2["type"] != "int":
+            raise Exception  # error 53
+
+        if symbol2["value"] == 0:
+            raise Exception  # error 57
+
+        self.store_to_variable(self.arguments["arg1"], {"value": symbol1["value"] / symbol2["value"], "type": "int"})
+
+    def LT(self):
+        symbol1 = self.load_symbol(self.arguments["arg2"])
+        symbol2 = self.load_symbol(self.arguments["arg3"])
+
+        if symbol1["type"] != symbol2["type"] or symbol1["type"] == "nil" or symbol2["type"] == "nil":
+            raise Exception  # error 53
+
+        self.store_to_variable(self.arguments["arg1"], {"value": symbol1["value"] < symbol2["value"], "type": "bool"})
+
+    def GT(self):
+        symbol1 = self.load_symbol(self.arguments["arg2"])
+        symbol2 = self.load_symbol(self.arguments["arg3"])
+
+        if symbol1["type"] != symbol2["type"] or symbol1["type"] == "nil" or symbol2["type"] == "nil":
+            raise Exception  # error 53
+
+        self.store_to_variable(self.arguments["arg1"], {"value": symbol1["value"] > symbol2["value"], "type": "bool"})
+
+    def EQ(self):
+        symbol1 = self.load_symbol(self.arguments["arg2"])
+        symbol2 = self.load_symbol(self.arguments["arg3"])
+
+        if symbol1["type"] != "nil" and symbol2["type"] != "nil" and symbol1["type"] != symbol2["type"]:
+            raise Exception  # error 53
+
+        self.store_to_variable(self.arguments["arg1"], {"value": symbol1["value"] == symbol2["value"], "type": "bool"})
+
+    def AND(self):
+        symbol1 = self.load_symbol(self.arguments["arg2"])
+        symbol2 = self.load_symbol(self.arguments["arg3"])
+
+        if symbol1["type"] != "bool" or symbol2["type"] != "bool":
+            raise Exception  # error 53
+
+        self.store_to_variable(self.arguments["arg1"], {"value": symbol1["value"] and symbol2["value"], "type": "bool"})
+
+    def OR(self):
+        symbol1 = self.load_symbol(self.arguments["arg2"])
+        symbol2 = self.load_symbol(self.arguments["arg3"])
+
+        if symbol1["type"] != "bool" or symbol2["type"] != "bool":
+            raise Exception  # error 53
+
+        self.store_to_variable(self.arguments["arg1"], {"value": symbol1["value"] or symbol2["value"], "type": "bool"})
+
+    def NOT(self):
+        symbol1 = self.load_symbol(self.arguments["arg2"])
+
+        if symbol1["type"] != "bool":
+            raise Exception  # error 53
+
+        self.store_to_variable(self.arguments["arg1"], {"value": not symbol1["value"], "type": "bool"})
+
+    def STRI2INT(self):
+        symbol1 = self.load_symbol(self.arguments["arg2"])
+        symbol2 = self.load_symbol(self.arguments["arg3"])
+
+        if symbol1["type"] != "string" or symbol2["type"] != "int":
+            raise Exception  # error 53
+
+        if len(symbol1["value"]) <= symbol2["value"]:
+            raise Exception  # error 58
+
+        self.store_to_variable(self.arguments["arg1"], {"value": ord(symbol1["value"][symbol2["value"]]), "type": "int"})
+
+    def READ(self):
+        type_t = self.arguments["arg2"]
+
+        if type_t.content != "bool" or type_t.content != "string" or type_t.content != "int":
+            raise Exception  # error 53 maybe another
+
+        if self.program.input_data["file"] == sys.stdin:
+            input_value = input()
+        else:
+            if len(self.program.input_data["data"]) > 0:
+                input_value = self.program.input_data["data"].pop(0)
+            else:
+                self.store_to_variable(self.arguments["arg1"], {"value": None, "type": "nil"})
+                return
+
+        if type_t.content == "bool":
+            input_value = {"value": True if input_value.lower == "true" else False, "type": "bool"}
+        elif type_t.content == "string":
+            input_value = {"value": input_value, "type": "string"}
+        elif type_t.content == "int":
+            try:
+                input_value = {"value": int(input_value), "type": "int"}
+            except ValueError:
+                input_value = {"value": None, "type": "nil"}
+
+        self.store_to_variable(self.arguments["arg1"], input_value)
+
+    def CONCAT(self):
+        symbol1 = self.load_symbol(self.arguments["arg2"])
+        symbol2 = self.load_symbol(self.arguments["arg3"])
+
+        if symbol1["type"] != "string" or symbol2["type"] != "string":
+            raise Exception  # error 53
+
+        self.store_to_variable(self.arguments["arg1"], {"value": symbol1["value"] + symbol2["value"], "type": "int"})
+
+    def STRLEN(self):
+        symbol1 = self.load_symbol(self.arguments["arg2"])
+
+        if symbol1["type"] != "string":
+            raise Exception  # error 53
+
+        self.store_to_variable(self.arguments["arg1"], {"value": len(symbol1["value"]), "type": "int"})
+
+    def GETCHAR(self):
+        symbol1 = self.load_symbol(self.arguments["arg2"])
+        symbol2 = self.load_symbol(self.arguments["arg3"])
+
+        if symbol1["type"] != "string" or symbol2["type"] != "int":
+            raise Exception  # error 53
+
+        if len(symbol1["value"]) <= symbol2["value"]:
+            raise Exception  # error 58
+
+        self.store_to_variable(self.arguments["arg1"], {"value": symbol1["value"][symbol2["value"]], "type": "string"})
+
+    def SETCHAR(self):
+        var = self.load_symbol(self.arguments["arg1"])
+        symbol1 = self.load_symbol(self.arguments["arg2"])
+        symbol2 = self.load_symbol(self.arguments["arg3"])
+
+        if var["type"] != "string" or symbol1["type"] != "int" or symbol2["type"] != "string":
+            raise Exception  # error 53
+
+        if len(var["value"]) <= symbol1["value"] or len(symbol2["value"] == 0):
+            raise Exception  # error 58
+
+        var["value"][symbol1["value"]] = symbol2["value"][0]
+        self.store_to_variable(self.arguments["arg1"], {"value": var["value"], "type": "int"})
+
+    def TYPE(self):
+        symbol1 = self.load_symbol(self.arguments["arg2"])
+
+        if symbol1 is None:
+            self.store_to_variable(self.arguments["arg1"], {"value": "", "type": "string"})
+        else:
+            self.store_to_variable(self.arguments["arg1"], {"value": symbol1["type"], "type": "string"})
+
+    def LABEL(self):
+        pass
+
+    def JUMP(self):
+        label = self.arguments["arg1"]
+        if label.content != self.program.labels:
+            raise Exception  # error 52
+
+        self.program.instruction_pointer = self.program.labels[label.content]
+
+    def JUMPIFEQ(self):
+        label = self.arguments["arg1"]
+        symbol1 = self.load_symbol(self.arguments["arg2"])
+        symbol2 = self.load_symbol(self.arguments["arg3"])
+
+        if symbol1["type"] != "nil" and symbol2["type"] != "nil" and symbol1["type"] != symbol2["type"]:
+            raise Exception  # error 53
+
+        if label.content != self.program.labels:
+            raise Exception  # error 52
+
+        if symbol1["value"] == symbol2["value"]:
+            self.program.instruction_pointer = self.program.labels[label.content]
+
+    def JUMPIFNEQ(self):
+        label = self.arguments["arg1"]
+        symbol1 = self.load_symbol(self.arguments["arg2"])
+        symbol2 = self.load_symbol(self.arguments["arg3"])
+
+        if symbol1["type"] != "nil" and symbol2["type"] != "nil" and symbol1["type"] != symbol2["type"]:
+            raise Exception  # error 53
+
+        if label.content != self.program.labels:
+            raise Exception  # error 52
+
+        if symbol1["value"] != symbol2["value"]:
+            self.program.instruction_pointer = self.program.labels[label.content]
+
+    def EXIT(self):
+        symbol = self.load_symbol(self.arguments["arg1"])
+        if symbol["value"] < 0 or symbol["value"] > 49:
+            raise Exception  # error 57
+        sys.exit(symbol["value"])
+
+    def DPRINT(self):
+        symbol = self.load_symbol(self.arguments["arg1"])
+        if symbol["type"] in ["int", "type"]:
+            print(symbol["value"], end="", file=sys.stderr)
+        elif symbol["type"] == "string":
+            print(symbol["value"], end="", file=sys.stderr)
+        elif symbol["type"] == "bool":
+            print("true" if symbol["value"] else "false", end="", file=sys.stderr)
+        elif symbol["type"] == "nil":
+            print("", end="", file=sys.stderr)
+
+    def BREAK(self):
+        print(self.program.__repr__(), file=sys.stderr)
 
 
 
