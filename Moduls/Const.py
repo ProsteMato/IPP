@@ -57,13 +57,12 @@ __INT = r"(\+|\-)?\d+"
 __BOOL = r"(true|false)"
 __NIL = r"nil"
 __SPECIAL_CHAR = r"_$&%*!?-"
-IDENTIFIER = r'[A-Za-z' + __SPECIAL_CHAR + r'][\w' + __SPECIAL_CHAR + r']*'
+IDENTIFIER = r'[A-Ža-ž' + __SPECIAL_CHAR + r'][\w' + __SPECIAL_CHAR + r']*'
 TYPE_REGEX = re.compile(r'^(int|bool|string)$')
 CONST_REGEX = re.compile(r"^(" + __STRING + r"|" + __INT + r"|" + __BOOL + r"|" + __NIL + r")$")
 VARIABLE_REGEX = re.compile(r"^((GF|LF|TF)@" + IDENTIFIER + r")$")
 COMPILED_IDENTIFIER_REGEX = re.compile(r"^(" + IDENTIFIER + r")$")
 
 INVALID_XML_ERROR = 31
-LEX_SYNTAX_ERROR = 32
 ERROR_OK = 0
 
