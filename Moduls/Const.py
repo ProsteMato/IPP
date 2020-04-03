@@ -65,8 +65,5 @@ COMPILED_IDENTIFIER_REGEX = re.compile(r"^(" + IDENTIFIER + r")$")
 
 INVALID_XML_ERROR = 31
 LEX_SYNTAX_ERROR = 32
-
-
-class InvalidXmlException(Exception):
-    pass
+ERROR_OK = 0
 

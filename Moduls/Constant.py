@@ -1,12 +1,13 @@
 from .Symbol import Symbol
 import Moduls.Const as Const
+from Moduls.exceptions import InvalidXmlException
 
 
 class Constant(Symbol):
 
     def __init__(self, content, type_t):
         if not Const.CONST_REGEX.match(type_t + "@" + content):
-            raise Const.InvalidXmlException
+            raise InvalidXmlException("Invalid 'type' or 'value' of constant: " + type_t + "@" + content)
         if type_t == "bool":
             self.content = True if content == "true" else "false"
         elif type_t == "int":
@@ -17,7 +18,8 @@ class Constant(Symbol):
             self.content = None
         self.type = type_t
 
-    def __parse_escape_sequence(self, content):
+    @staticmethod
+    def __parse_escape_sequence(content):
         new_content = ""
         idx = 0
         while idx < len(content):

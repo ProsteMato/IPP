@@ -2,6 +2,7 @@ from Moduls.XmlParser import XmlParser
 import Moduls.Const as Const
 from Moduls.Program import Program
 import xml.etree.ElementTree as elementTree
+from Moduls.exceptions import InvalidXmlException
 import argparse
 import sys
 
@@ -27,10 +28,10 @@ try:
     xmlParser = XmlParser(parsed_args.source, program)
     instructions = xmlParser.parse()
     program.run_program(instructions)
-except elementTree.ParseError:
-    print("Invalid XML!", file=sys.stderr)
+except elementTree.ParseError as e:
+    print(e.msg, file=sys.stderr)
     sys.exit(Const.INVALID_XML_ERROR)
-except Const.InvalidXmlException:
-    print("lex error", file=sys.stderr)
+except InvalidXmlException as e1:
+    print(e1.args[0], file=sys.stderr)
     sys.exit(Const.LEX_SYNTAX_ERROR)
 sys.exit(0)

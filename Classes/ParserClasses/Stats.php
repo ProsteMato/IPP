@@ -60,8 +60,8 @@ class Stats
      */
     public function generateStats($parsedArguments)
     {
-        if (!is_writable($parsedArguments["stats"])) {
-            throw new PermissionException(basename(__FILE__)."::".__FUNCTION__."File \"{$parsedArguments["stats"]}\" is not readable!");
+        if (is_file($parsedArguments["stats"]) && !is_writable($parsedArguments["stats"])) {
+            throw new PermissionException(basename(__FILE__)."::".__FUNCTION__."File \"{$parsedArguments["stats"]}\" is not writable!");
         }
         $file = fopen($parsedArguments["stats"], "w");
         $arguments = $this->arguments2Array($parsedArguments);

@@ -14,6 +14,7 @@ class Tester
     private string $jExamXmlFile;
     private string $parserFile;
     private string $tmpFile;
+    private string $tmpFileInterpret;
     private int $returnValue;
     private int $mode;
 
@@ -46,11 +47,13 @@ class Tester
         $this->jExamXmlFile = $jExamXmlFile;
         $this->returnValue = 0;
         $this->tmpFile = tempnam(sys_get_temp_dir(), "tmpFile");
+        $this->tmpFileInterpret = tempnam(sys_get_temp_dir(), "interpret");
     }
 
     public function __destruct()
     {
         unlink($this->tmpFile);
+        unlink($this->tmpFileInterpret);
     }
 
     /**
@@ -109,7 +112,8 @@ class Tester
 
     private function both(array $testCases) {
         foreach ($testCases as $this->actualTestCase) {
-            if ($this->runParser() == 0) {
+            $this->runParser();
+            if ($this->returnValue == 0) {
                 if($this->runInterpret($this->tmpFile)) {
                     $this->compareOutputs(array($this, "runDiff"));
                 }
@@ -122,15 +126,15 @@ class Tester
             "php7.4 \"$this->parserFile\" < \"{$this->actualTestCase->getTestCaseSrc()}\" > \"$this->tmpFile\"",
             $this->returnValue
         );
-        return $this->returnValue == file_get_contents($this->actualTestCase->getTestCaseRc());
+        return (int)($this->returnValue == file_get_contents($this->actualTestCase->getTestCaseRc()));
     }
 
     private function runInterpret($source) {
         system(
-            "python3 \"$this->interpretFile\" --source=\"$source\" --input=\"{$this->actualTestCase->getTestCaseIn()}\" | tee \"$this->tmpFile\" > /dev/null",
+            "python3.8 \"$this->interpretFile\" --source=\"$source\" --input=\"{$this->actualTestCase->getTestCaseIn()}\" > \"$this->tmpFileInterpret\"",
             $this->returnValue
         );
-        return $this->returnValue == file_get_contents($this->actualTestCase->getTestCaseRc());
+        return (int)($this->returnValue == file_get_contents($this->actualTestCase->getTestCaseRc()));
     }
 
     private function runJExamXml() {
@@ -145,7 +149,7 @@ class Tester
 
     private function runDiff() {
         system(
-            "diff \"$this->tmpFile\" \"{$this->actualTestCase->getTestCaseOut()}\" > /dev/null",
+            "diff \"$this->tmpFileInterpret\" \"{$this->actualTestCase->getTestCaseOut()}\" > /dev/null",
             $this->returnValue
         );
         return $this->returnValue;

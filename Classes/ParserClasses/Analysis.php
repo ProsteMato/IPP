@@ -47,7 +47,9 @@ class Analysis
      */
     public function isHeader($token)
     {
-        $token = mb_strtolower($token[0]);
+        if (!$this->isEndingToken($token)) {
+            $token = mb_strtolower($token[0]);
+        }
         if(strcmp(".ippcode20", $token) != 0)
             throw new InvalidHeaderException(basename(__FILE__)."::".__FUNCTION__." - \"$token\" is not correct header of IPPCode20 language!", Errors::HEADER_ERR);
     }

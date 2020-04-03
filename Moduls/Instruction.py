@@ -3,7 +3,8 @@ from .Variable import Variable
 from .Constant import Constant
 from .Label import Label
 from .TypeT import TypeT
-from .Const import InvalidXmlException, INSTRUCTIONS
+from .exceptions import InvalidXmlException
+from .Const import INSTRUCTIONS
 
 
 class Instruction:
