@@ -3,7 +3,7 @@ from .Variable import Variable
 from .Constant import Constant
 from .Label import Label
 from .TypeT import TypeT
-from .exceptions import InvalidXmlException
+from .exceptions import *
 from .Const import INSTRUCTIONS
 
 
@@ -21,19 +21,23 @@ class Instruction:
 
     def check_arguments(self):
         required_argument_type = INSTRUCTIONS.setdefault(self.op_code, [])
-        for index in range(1, len(required_argument_type) + 1):
-            argument_name = "arg" + str(index)
+        for index, type in enumerate(required_argument_type):
+            argument_name = "arg" + str(index + 1)
             if argument_name not in self.arguments:
-                raise InvalidXmlException
-            if not isinstance(self.arguments[argument_name], required_argument_type[index - 1]):
-                raise InvalidXmlException
+                raise InvalidXmlException("Invalid name of argument element")
+            if not isinstance(self.arguments[argument_name], type):
+                raise InvalidXmlException("ASI INY ERROR TODO:")
 
     def var_exists(self, var):
         if var.scope == "GF":
             return var.name in self.program.GF
         elif var.scope == "LF":
-            return len(self.program.LF[-1]) != 0 and var.name in self.program.LF[-1]
-        else:
+            if len(self.program.LF) == 0:
+                raise InvalidFrameException("Accessing to non-existing frame!")
+            return var.name in self.program.LF[-1]
+        elif var.scope == "TF":
+            if self.program.TF is None:
+                raise InvalidFrameException("Accessing to non-existing frame!")
             return var.name in self.program.TF
 
     def load_symbol(self, symbol):
@@ -44,17 +48,23 @@ class Instruction:
 
     def load_from_variable(self, var):
         if not self.var_exists(var):
-            raise Exception  # error 54
+            raise NonExistingVarException("Trying to read from undefined variable!")  # error 54
         if var.scope == "GF":
+            if self.program.GF[var.name] is None:
+                raise MissingValueException("Accessing empty value!")
             return self.program.GF[var.name]
         elif var.scope == "LF":
+            if self.program.LF[-1][var.name] is None:
+                raise MissingValueException("Accessing empty value!")
             return self.program.LF[-1][var.name]
         else:
+            if self.program.TF[var.name] is None:
+                raise MissingValueException("Accessing empty value!")
             return self.program.TF[var.name]
 
     def store_to_variable(self, var, content):
         if not self.var_exists(var):
-            raise Exception  # error 54
+            raise NonExistingVarException("Trying to read from undefined variable!")  # error 54
         if var.scope == "GF":
             self.program.GF[var.name] = content
         elif var.scope == "LF":
@@ -67,23 +77,26 @@ class Instruction:
 
     def PUSHFRAME(self):
         if self.program.TF is None:
-            raise Exception  # error 55
+            raise InvalidFrameException("Reading from empty frame!")  # error 55
         self.program.LF.append(self.program.TF)
         self.program.TF = None
 
     def POPFRAME(self):
         if len(self.program.LF) == 0:
-            raise Exception  # error 55
+            raise InvalidFrameException("Reading from empty frame!")  # error 55
         self.program.TF = self.program.LF.pop()
 
     def CALL(self):
+        label = self.arguments["arg1"].content
         self.program.call_stack.append(self.program.instruction_pointer + 1)
-        self.program.instruction_pointer = self.program.labels[self.arguments["arg1"]]
+        if label not in self.program.labels:
+            raise InvalidCodeException("Undefined label: '" + label + "'!")  # error 52
+        self.program.instruction_pointer = self.program.labels[label]
 
     def RETURN(self):
         if len(self.program.call_stack) == 0:
-            raise Exception  # error 56
-        self.program.instruction_pointer = self.program.call_stack.pop()
+            raise MissingValueException("Missing value in stack")  # error 56
+        self.program.instruction_pointer = self.program.call_stack.pop() - 1
 
     def PUSHS(self):
         content = self.load_symbol(self.arguments["arg1"])
@@ -91,7 +104,7 @@ class Instruction:
 
     def POPS(self):
         if len(self.program.data_stack) == 0:
-            raise Exception  # error 56
+            raise MissingValueException("Missing value in stack")  # error 56
         self.store_to_variable(self.arguments["arg1"], self.program.data_stack.pop())
 
     def INT2CHAR(self):
@@ -100,11 +113,12 @@ class Instruction:
         content = self.load_symbol(argument2)
 
         if content["type"] != "int":
-            raise Exception # error 58
+            raise BadOperandTypeException("Invalid type of argument")  # error 53
+
         try:
             self.store_to_variable(argument1, {"value": chr(content["value"]), "type": "string"})
         except ValueError:
-            raise Exception  # error 58
+            raise InvalidStringOperationException("Invalid order value!")  # error 58
 
     def WRITE(self):
         argument1 = self.arguments["arg1"]
@@ -128,20 +142,20 @@ class Instruction:
     def DEFVAR(self):
         argument1 = self.arguments["arg1"]
         if self.var_exists(argument1):
-            raise Exception  # error 52
+            raise InvalidCodeException("Variable '" + argument1.name + "' is already defined!")  # error 54
         if argument1.scope == "GF":
             self.program.GF[argument1.name] = None
         elif argument1.scope == "LF":
-            self.program.LF[argument1.name] = None
+            self.program.LF[-1][argument1.name] = None
         elif argument1.scope == "TF":
-            self.program.TF[-1][argument1.name] = None
+            self.program.TF[argument1.name] = None
 
     def ADD(self):
         symbol1 = self.load_symbol(self.arguments["arg2"])
         symbol2 = self.load_symbol(self.arguments["arg3"])
 
         if symbol1["type"] != "int" or symbol2["type"] != "int":
-            raise Exception  # error 53
+            raise BadOperandTypeException("Incorrect Type of argument!")  # error 53
 
         self.store_to_variable(self.arguments["arg1"], {"value": symbol1["value"] + symbol2["value"], "type": "int"})
 
@@ -150,7 +164,7 @@ class Instruction:
         symbol2 = self.load_symbol(self.arguments["arg3"])
 
         if symbol1["type"] != "int" or symbol2["type"] != "int":
-            raise Exception  # error 53
+            raise BadOperandTypeException("Incorrect Type of argument!")  # error 53
 
         self.store_to_variable(self.arguments["arg1"], {"value": symbol1["value"] - symbol2["value"], "type": "int"})
 
@@ -159,7 +173,7 @@ class Instruction:
         symbol2 = self.load_symbol(self.arguments["arg3"])
 
         if symbol1["type"] != "int" or symbol2["type"] != "int":
-            raise Exception  # error 53
+            raise BadOperandTypeException("Incorrect Type of argument!")  # error 53
 
         self.store_to_variable(self.arguments["arg1"], {"value": symbol1["value"] * symbol2["value"], "type": "int"})
 
@@ -168,19 +182,19 @@ class Instruction:
         symbol2 = self.load_symbol(self.arguments["arg3"])
 
         if symbol1["type"] != "int" or symbol2["type"] != "int":
-            raise Exception  # error 53
+            raise BadOperandTypeException("Incorrect Type of argument!")  # error 53
 
         if symbol2["value"] == 0:
-            raise Exception  # error 57
+            raise BadValueException("Dividing be zero!")  # error 57
 
-        self.store_to_variable(self.arguments["arg1"], {"value": symbol1["value"] / symbol2["value"], "type": "int"})
+        self.store_to_variable(self.arguments["arg1"], {"value": symbol1["value"] // symbol2["value"], "type": "int"})
 
     def LT(self):
         symbol1 = self.load_symbol(self.arguments["arg2"])
         symbol2 = self.load_symbol(self.arguments["arg3"])
 
         if symbol1["type"] != symbol2["type"] or symbol1["type"] == "nil" or symbol2["type"] == "nil":
-            raise Exception  # error 53
+            raise BadOperandTypeException("Incorrect Type of argument!")  # error 53
 
         self.store_to_variable(self.arguments["arg1"], {"value": symbol1["value"] < symbol2["value"], "type": "bool"})
 
@@ -189,7 +203,7 @@ class Instruction:
         symbol2 = self.load_symbol(self.arguments["arg3"])
 
         if symbol1["type"] != symbol2["type"] or symbol1["type"] == "nil" or symbol2["type"] == "nil":
-            raise Exception  # error 53
+            raise BadOperandTypeException("Incorrect Type of argument!")  # error 53
 
         self.store_to_variable(self.arguments["arg1"], {"value": symbol1["value"] > symbol2["value"], "type": "bool"})
 
@@ -198,7 +212,7 @@ class Instruction:
         symbol2 = self.load_symbol(self.arguments["arg3"])
 
         if symbol1["type"] != "nil" and symbol2["type"] != "nil" and symbol1["type"] != symbol2["type"]:
-            raise Exception  # error 53
+            raise BadOperandTypeException("Incorrect Type of argument!")  # error 53
 
         self.store_to_variable(self.arguments["arg1"], {"value": symbol1["value"] == symbol2["value"], "type": "bool"})
 
@@ -207,7 +221,7 @@ class Instruction:
         symbol2 = self.load_symbol(self.arguments["arg3"])
 
         if symbol1["type"] != "bool" or symbol2["type"] != "bool":
-            raise Exception  # error 53
+            raise BadOperandTypeException("Incorrect Type of argument!")  # error 53
 
         self.store_to_variable(self.arguments["arg1"], {"value": symbol1["value"] and symbol2["value"], "type": "bool"})
 
@@ -216,7 +230,7 @@ class Instruction:
         symbol2 = self.load_symbol(self.arguments["arg3"])
 
         if symbol1["type"] != "bool" or symbol2["type"] != "bool":
-            raise Exception  # error 53
+            raise BadOperandTypeException("Incorrect 'type' of argument!")  # error 53
 
         self.store_to_variable(self.arguments["arg1"], {"value": symbol1["value"] or symbol2["value"], "type": "bool"})
 
@@ -224,7 +238,7 @@ class Instruction:
         symbol1 = self.load_symbol(self.arguments["arg2"])
 
         if symbol1["type"] != "bool":
-            raise Exception  # error 53
+            raise BadOperandTypeException("Incorrect Type of argument!")  # error 53
 
         self.store_to_variable(self.arguments["arg1"], {"value": not symbol1["value"], "type": "bool"})
 
@@ -233,18 +247,18 @@ class Instruction:
         symbol2 = self.load_symbol(self.arguments["arg3"])
 
         if symbol1["type"] != "string" or symbol2["type"] != "int":
-            raise Exception  # error 53
+            raise BadOperandTypeException("Incorrect Type of argument!")  # error 53
 
-        if len(symbol1["value"]) <= symbol2["value"]:
-            raise Exception  # error 58
+        if len(symbol1["value"]) <= symbol2["value"] or symbol2["value"] < 0:
+            raise InvalidStringOperationException("Bad indexing in string!")  # error 58
 
         self.store_to_variable(self.arguments["arg1"], {"value": ord(symbol1["value"][symbol2["value"]]), "type": "int"})
 
     def READ(self):
         type_t = self.arguments["arg2"]
 
-        if type_t.content != "bool" or type_t.content != "string" or type_t.content != "int":
-            raise Exception  # error 53 maybe another
+        if type_t.content != "bool" and type_t.content != "string" and type_t.content != "int":
+            raise BadOperandTypeException("Incorrect Type of argument!")  # error 53 maybe another
 
         if self.program.input_data["file"] == sys.stdin:
             input_value = input()
@@ -256,7 +270,7 @@ class Instruction:
                 return
 
         if type_t.content == "bool":
-            input_value = {"value": True if input_value.lower == "true" else False, "type": "bool"}
+            input_value = {"value": input_value.lower() == "true", "type": "bool"}
         elif type_t.content == "string":
             input_value = {"value": input_value, "type": "string"}
         elif type_t.content == "int":
@@ -272,15 +286,15 @@ class Instruction:
         symbol2 = self.load_symbol(self.arguments["arg3"])
 
         if symbol1["type"] != "string" or symbol2["type"] != "string":
-            raise Exception  # error 53
+            raise BadOperandTypeException("Incorrect Type of argument!")  # error 53
 
-        self.store_to_variable(self.arguments["arg1"], {"value": symbol1["value"] + symbol2["value"], "type": "int"})
+        self.store_to_variable(self.arguments["arg1"], {"value": symbol1["value"] + symbol2["value"], "type": "string"})
 
     def STRLEN(self):
         symbol1 = self.load_symbol(self.arguments["arg2"])
 
         if symbol1["type"] != "string":
-            raise Exception  # error 53
+            raise BadOperandTypeException("Incorrect Type of argument!")  # error 53
 
         self.store_to_variable(self.arguments["arg1"], {"value": len(symbol1["value"]), "type": "int"})
 
@@ -289,10 +303,10 @@ class Instruction:
         symbol2 = self.load_symbol(self.arguments["arg3"])
 
         if symbol1["type"] != "string" or symbol2["type"] != "int":
-            raise Exception  # error 53
+            raise BadOperandTypeException("Incorrect Type of argument!")  # error 53
 
-        if len(symbol1["value"]) <= symbol2["value"]:
-            raise Exception  # error 58
+        if len(symbol1["value"]) <= symbol2["value"] or symbol2["value"] < 0:
+            raise InvalidStringOperationException("Bad indexing in string!")  # error 58
 
         self.store_to_variable(self.arguments["arg1"], {"value": symbol1["value"][symbol2["value"]], "type": "string"})
 
@@ -302,16 +316,29 @@ class Instruction:
         symbol2 = self.load_symbol(self.arguments["arg3"])
 
         if var["type"] != "string" or symbol1["type"] != "int" or symbol2["type"] != "string":
-            raise Exception  # error 53
+            raise BadOperandTypeException("Incorrect Type of argument!")  # error 53
 
-        if len(var["value"]) <= symbol1["value"] or len(symbol2["value"] == 0):
-            raise Exception  # error 58
+        if len(var["value"]) <= symbol1["value"] or len(symbol2["value"]) == 0 or symbol1["value"] < 0:
+            raise InvalidStringOperationException("Bad indexing in string!")  # error 58
 
-        var["value"][symbol1["value"]] = symbol2["value"][0]
-        self.store_to_variable(self.arguments["arg1"], {"value": var["value"], "type": "int"})
+        new = list(var["value"])
+        new[symbol1["value"]] = symbol2["value"][0]
+
+        self.store_to_variable(self.arguments["arg1"], {"value": ''.join(new), "type": "string"})
 
     def TYPE(self):
-        symbol1 = self.load_symbol(self.arguments["arg2"])
+        symbol1 = self.arguments["arg2"]
+        if isinstance(symbol1, Variable):
+            if not self.var_exists(symbol1):
+                raise NonExistingVarException("Trying to read from undefined variable!")  # error 54
+            if symbol1.scope == "GF":
+                symbol1 = self.program.GF[symbol1.name]
+            elif symbol1.scope == "LF":
+                symbol1 = self.program.LF[-1][symbol1.name]
+            else:
+                symbol1 = self.program.TF[symbol1.name]
+        elif isinstance(symbol1, Constant):
+            symbol1 = {"value": symbol1.content, "type": symbol1.type}
 
         if symbol1 is None:
             self.store_to_variable(self.arguments["arg1"], {"value": "", "type": "string"})
@@ -323,8 +350,8 @@ class Instruction:
 
     def JUMP(self):
         label = self.arguments["arg1"]
-        if label.content != self.program.labels:
-            raise Exception  # error 52
+        if label.content not in self.program.labels:
+            raise InvalidCodeException("Undefined label: '" + label.content + "'!")  # error 52
 
         self.program.instruction_pointer = self.program.labels[label.content]
 
@@ -334,10 +361,10 @@ class Instruction:
         symbol2 = self.load_symbol(self.arguments["arg3"])
 
         if symbol1["type"] != "nil" and symbol2["type"] != "nil" and symbol1["type"] != symbol2["type"]:
-            raise Exception  # error 53
+            raise BadOperandTypeException("Incorrect Type of argument!")  # error 53
 
-        if label.content != self.program.labels:
-            raise Exception  # error 52
+        if label.content not in self.program.labels:
+            raise InvalidCodeException("Undefined label: '" + label.content + "'!")  # error 52
 
         if symbol1["value"] == symbol2["value"]:
             self.program.instruction_pointer = self.program.labels[label.content]
@@ -348,18 +375,22 @@ class Instruction:
         symbol2 = self.load_symbol(self.arguments["arg3"])
 
         if symbol1["type"] != "nil" and symbol2["type"] != "nil" and symbol1["type"] != symbol2["type"]:
-            raise Exception  # error 53
+            raise BadOperandTypeException("Incorrect Type of argument!")  # error 53
 
-        if label.content != self.program.labels:
-            raise Exception  # error 52
+        if label.content not in self.program.labels:
+            raise InvalidCodeException("Undefined label: '" + label.content + "'!")  # error 52
 
         if symbol1["value"] != symbol2["value"]:
             self.program.instruction_pointer = self.program.labels[label.content]
 
     def EXIT(self):
         symbol = self.load_symbol(self.arguments["arg1"])
+
+        if symbol["type"] != "int":
+            raise BadOperandTypeException("Incorrect Type of argument!")  # error 53
+
         if symbol["value"] < 0 or symbol["value"] > 49:
-            raise Exception  # error 57
+            raise BadValueException("Invalid exit value!")  # error 57
         sys.exit(symbol["value"])
 
     def DPRINT(self):

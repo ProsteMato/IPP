@@ -7,6 +7,7 @@ from .Variable import Variable
 from .Label import Label
 from .TypeT import TypeT
 import re
+import sys
 
 
 class XmlParser:
@@ -72,17 +73,17 @@ class XmlParser:
     @staticmethod
     def __check_program_allowed_attrib(element):
         if not all(attribute in ["language", "name", "description"] for attribute in element.keys()):
-            raise InvalidXmlException(element.keys() + " one or more unsupported attributes in element program!")
+            raise InvalidXmlException("One or more unsupported attributes in element program!")
 
     @staticmethod
     def __check_instruction_allowed_attrib(element):
         if not all(attribute in ["order", "opcode"] for attribute in element.keys()):
-            raise InvalidXmlException(element.keys() + " one or more unsupported attributes in element instruction!")
+            raise InvalidXmlException("One or more unsupported attributes in element instruction!")
 
     @staticmethod
     def __check_argument_allowed_attrib(element):
         if not all(attribute in ["type"] for attribute in element.keys()):
-            raise InvalidXmlException(element.keys() + " one or more unsupported attributes in element argument!")
+            raise InvalidXmlException("One or more unsupported attributes in element argument!")
 
     @staticmethod
     def __check_program_attrib(element):
@@ -119,7 +120,7 @@ class XmlParser:
 
     @staticmethod
     def __check_op_code(op_code: str):
-        if not Const.INSTRUCTIONS.setdefault(op_code.upper(), None):
+        if op_code.upper() not in Const.INSTRUCTIONS:
             raise InvalidXmlException("Unsupported OpCode: " + op_code + "!")
 
     @staticmethod

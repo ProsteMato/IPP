@@ -1,3 +1,4 @@
+from .exceptions import InvalidCodeException
 
 
 class Program:
@@ -15,9 +16,9 @@ class Program:
 
         for idx, instruction in enumerate(instructions):
             if instruction.op_code == "LABEL":
-                if instruction.arguments["arg1"] in self.labels:
-                    raise Exception  # error 52
-                self.labels[instruction.arguments["arg1"]] = idx
+                if instruction.arguments["arg1"].content in self.labels:
+                    raise InvalidCodeException("Redefinition of label '" + instruction.arguments["arg1"].content + "!''")  # error 52
+                self.labels[instruction.arguments["arg1"].content] = idx
 
         while self.instruction_pointer < len(instructions):
             instructions[self.instruction_pointer].execute()

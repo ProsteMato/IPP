@@ -2,7 +2,7 @@ from Moduls.XmlParser import XmlParser
 import Moduls.Const as Const
 from Moduls.Program import Program
 import xml.etree.ElementTree as elementTree
-from Moduls.exceptions import InvalidXmlException
+from Moduls.exceptions import *
 import argparse
 import sys
 
@@ -28,10 +28,12 @@ try:
     xmlParser = XmlParser(parsed_args.source, program)
     instructions = xmlParser.parse()
     program.run_program(instructions)
-except elementTree.ParseError as e:
-    print(e.msg, file=sys.stderr)
+except elementTree.ParseError:
+    print("Not well-formed XML file!", file=sys.stderr)
     sys.exit(Const.INVALID_XML_ERROR)
-except InvalidXmlException as e1:
-    print(e1.args[0], file=sys.stderr)
-    sys.exit(Const.LEX_SYNTAX_ERROR)
-sys.exit(0)
+except (InvalidXmlException, InvalidCodeException, BadOperandTypeException,
+        NonExistingVarException, InvalidFrameException, MissingValueException,
+        BadValueException, InvalidStringOperationException) as e:
+    print(e.msg, file=sys.stderr)
+    sys.exit(e.error)
+sys.exit(Const.ERROR_OK)

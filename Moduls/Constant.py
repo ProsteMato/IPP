@@ -1,15 +1,18 @@
 from .Symbol import Symbol
 import Moduls.Const as Const
 from Moduls.exceptions import InvalidXmlException
+import sys
 
 
 class Constant(Symbol):
 
     def __init__(self, content, type_t):
-        if not Const.CONST_REGEX.match(type_t + "@" + content):
-            raise InvalidXmlException("Invalid 'type' or 'value' of constant: " + type_t + "@" + content)
+        if content is None:
+            content = ""
+        if not Const.CONST_REGEX.match(content):
+            raise InvalidXmlException("Invalid 'value' of constant: " + type_t + "@" + content)
         if type_t == "bool":
-            self.content = True if content == "true" else "false"
+            self.content = content == "true"
         elif type_t == "int":
             self.content = int(content)
         elif type_t == "string":
@@ -25,7 +28,7 @@ class Constant(Symbol):
         while idx < len(content):
             if content[idx] == "\\":
                 new_content += chr(int(content[idx + 1: idx + 4]))
-                idx += 4
+                idx += 3
             else:
                 new_content += content[idx]
             idx += 1

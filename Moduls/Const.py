@@ -10,7 +10,7 @@ INSTRUCTIONS = {
     "PUSHFRAME": [],
     "POPFRAME": [],
     "DEFVAR": [Variable],
-    "CALL": [[Label]],
+    "CALL": [Label],
     "RETURN": [],
     "PUSHS": [Symbol],
     "POPS": [Variable],
@@ -52,10 +52,10 @@ TYPES = {
     'type': 'TypeT'
 }
 
-__STRING = r'string@(([^\s\\#]|\\\d{3})+|$)'
-__INT = r"int@(\+|\-)?\d+"
-__BOOL = r"bool@(true|false)"
-__NIL = r"nil@nil"
+__STRING = r'(([^\s\\#]|\\\d{3})+|$)'
+__INT = r"(\+|\-)?\d+"
+__BOOL = r"(true|false)"
+__NIL = r"nil"
 __SPECIAL_CHAR = r"_$&%*!?-"
 IDENTIFIER = r'[A-Za-z' + __SPECIAL_CHAR + r'][\w' + __SPECIAL_CHAR + r']*'
 TYPE_REGEX = re.compile(r'^(int|bool|string)$')

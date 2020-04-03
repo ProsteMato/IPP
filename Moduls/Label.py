@@ -5,6 +5,8 @@ from .exceptions import InvalidXmlException
 class Label:
 
     def __init__(self, content, type_t):
+        if content is None:
+            raise InvalidXmlException("Invalid 'value' of label")
         if not Const.COMPILED_IDENTIFIER_REGEX.match(content):
             raise InvalidXmlException("Label format is not correct: " + content)
         self.content = content
