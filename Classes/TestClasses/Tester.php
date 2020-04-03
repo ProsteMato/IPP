@@ -117,6 +117,10 @@ class Tester
                 if($this->runInterpret($this->tmpFile)) {
                     $this->compareOutputs(array($this, "runDiff"));
                 }
+            } else {
+                if ($this->returnValue == file_get_contents($this->actualTestCase->getTestCaseRc())) {
+                    $this->actualTestCase->setPassed();
+                }
             }
         }
     }
