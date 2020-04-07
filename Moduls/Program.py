@@ -28,5 +28,12 @@ class Program:
             self.instruction_pointer += 1
 
     def __repr__(self):
-        # TODO add text to this...
-        return ""
+        return f'''
+        Instruction pointer: {self.instruction_pointer}
+        Instructions executed: {self.stats.instructions}
+        Global Frame: {str(self.GF)}
+        Local Frame: {str(self.LF)}
+        Temporary Frame: {str(self.TF)}
+        Call Stack: {str(self.call_stack)}
+        Data Stack: {str(self.data_stack)}
+        '''
