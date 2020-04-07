@@ -4,6 +4,12 @@ class InvalidXmlException(Exception):
         self.error = 32
 
 
+class WritePermissionError(PermissionError):
+    def __init__(self, msg):
+        self.msg = msg
+        self.error = 12
+
+
 class InvalidCodeException(Exception):
     # 52
     def __init__(self, msg):

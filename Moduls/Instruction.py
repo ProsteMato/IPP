@@ -9,11 +9,12 @@ from .Const import INSTRUCTIONS
 
 class Instruction:
 
-    def __init__(self, program, order, op_code, arguments):
+    def __init__(self, program, stats, order, op_code, arguments):
         self.order = order
         self.op_code = op_code
         self.arguments = arguments
         self.program = program
+        self.stats = stats
 
     def execute(self):
         self.check_arguments()
@@ -66,10 +67,13 @@ class Instruction:
         if not self.var_exists(var):
             raise NonExistingVarException("Trying to read from undefined variable!")  # error 54
         if var.scope == "GF":
+            self.stats.initialized_variable(var.name)
             self.program.GF[var.name] = content
         elif var.scope == "LF":
+            self.stats.initialized_variable(var.name)
             self.program.LF[-1][var.name] = content
         else:
+            self.stats.initialized_variable(var.name)
             self.program.TF[var.name] = content
 
     def CREATEFRAME(self):
@@ -87,11 +91,8 @@ class Instruction:
         self.program.TF = self.program.LF.pop()
 
     def CALL(self):
-        label = self.arguments["arg1"].content
         self.program.call_stack.append(self.program.instruction_pointer + 1)
-        if label not in self.program.labels:
-            raise InvalidCodeException("Undefined label: '" + label + "'!")  # error 52
-        self.program.instruction_pointer = self.program.labels[label]
+        self.JUMP()
 
     def RETURN(self):
         if len(self.program.call_stack) == 0:
@@ -108,15 +109,13 @@ class Instruction:
         self.store_to_variable(self.arguments["arg1"], self.program.data_stack.pop())
 
     def INT2CHAR(self):
-        argument1 = self.arguments["arg1"]
-        argument2 = self.arguments["arg2"]
-        content = self.load_symbol(argument2)
+        symbol = self.load_symbol(self.arguments["arg2"])
 
-        if content["type"] != "int":
+        if symbol["type"] != "int":
             raise BadOperandTypeException("Invalid type of argument")  # error 53
 
         try:
-            self.store_to_variable(argument1, {"value": chr(content["value"]), "type": "string"})
+            self.store_to_variable(self.arguments["arg1"], {"value": chr(symbol["value"]), "type": "string"})
         except ValueError:
             raise InvalidStringOperationException("Invalid order value!")  # error 58
 
@@ -144,94 +143,88 @@ class Instruction:
         if self.var_exists(argument1):
             raise InvalidCodeException("Variable '" + argument1.name + "' is already defined!")  # error 54
         if argument1.scope == "GF":
+            self.stats.add_variable(argument1.name)
             self.program.GF[argument1.name] = None
         elif argument1.scope == "LF":
+            self.stats.add_variable(argument1.name)
             self.program.LF[-1][argument1.name] = None
         elif argument1.scope == "TF":
+            self.stats.add_variable(argument1.name)
             self.program.TF[argument1.name] = None
 
-    def ADD(self):
+    def arithmetic_operands(self):
         symbol1 = self.load_symbol(self.arguments["arg2"])
         symbol2 = self.load_symbol(self.arguments["arg3"])
 
         if symbol1["type"] != "int" or symbol2["type"] != "int":
             raise BadOperandTypeException("Incorrect Type of argument!")  # error 53
 
-        self.store_to_variable(self.arguments["arg1"], {"value": symbol1["value"] + symbol2["value"], "type": "int"})
+        return self.arguments["arg1"], symbol1, symbol2
+
+    def ADD(self):
+        variable, symbol1, symbol2 = self.arithmetic_operands()
+        self.store_to_variable(variable, {"value": symbol1["value"] + symbol2["value"], "type": "int"})
 
     def SUB(self):
-        symbol1 = self.load_symbol(self.arguments["arg2"])
-        symbol2 = self.load_symbol(self.arguments["arg3"])
-
-        if symbol1["type"] != "int" or symbol2["type"] != "int":
-            raise BadOperandTypeException("Incorrect Type of argument!")  # error 53
-
-        self.store_to_variable(self.arguments["arg1"], {"value": symbol1["value"] - symbol2["value"], "type": "int"})
+        variable, symbol1, symbol2 = self.arithmetic_operands()
+        self.store_to_variable(variable, {"value": symbol1["value"] - symbol2["value"], "type": "int"})
 
     def MUL(self):
-        symbol1 = self.load_symbol(self.arguments["arg2"])
-        symbol2 = self.load_symbol(self.arguments["arg3"])
-
-        if symbol1["type"] != "int" or symbol2["type"] != "int":
-            raise BadOperandTypeException("Incorrect Type of argument!")  # error 53
-
-        self.store_to_variable(self.arguments["arg1"], {"value": symbol1["value"] * symbol2["value"], "type": "int"})
+        variable, symbol1, symbol2 = self.arithmetic_operands()
+        self.store_to_variable(variable, {"value": symbol1["value"] * symbol2["value"], "type": "int"})
 
     def IDIV(self):
-        symbol1 = self.load_symbol(self.arguments["arg2"])
-        symbol2 = self.load_symbol(self.arguments["arg3"])
-
-        if symbol1["type"] != "int" or symbol2["type"] != "int":
-            raise BadOperandTypeException("Incorrect Type of argument!")  # error 53
+        variable, symbol1, symbol2 = self.arithmetic_operands()
 
         if symbol2["value"] == 0:
             raise BadValueException("Dividing be zero!")  # error 57
 
         self.store_to_variable(self.arguments["arg1"], {"value": symbol1["value"] // symbol2["value"], "type": "int"})
 
-    def LT(self):
+    def comparison_operands(self):
         symbol1 = self.load_symbol(self.arguments["arg2"])
         symbol2 = self.load_symbol(self.arguments["arg3"])
 
         if symbol1["type"] != symbol2["type"] or symbol1["type"] == "nil" or symbol2["type"] == "nil":
             raise BadOperandTypeException("Incorrect Type of argument!")  # error 53
 
-        self.store_to_variable(self.arguments["arg1"], {"value": symbol1["value"] < symbol2["value"], "type": "bool"})
+        return self.arguments["arg1"], symbol1, symbol2
+
+    def LT(self):
+        variable, symbol1, symbol2 = self.comparison_operands()
+        self.store_to_variable(variable, {"value": symbol1["value"] < symbol2["value"], "type": "bool"})
 
     def GT(self):
-        symbol1 = self.load_symbol(self.arguments["arg2"])
-        symbol2 = self.load_symbol(self.arguments["arg3"])
+        variable, symbol1, symbol2 = self.comparison_operands()
+        self.store_to_variable(variable, {"value": symbol1["value"] > symbol2["value"], "type": "bool"})
 
-        if symbol1["type"] != symbol2["type"] or symbol1["type"] == "nil" or symbol2["type"] == "nil":
-            raise BadOperandTypeException("Incorrect Type of argument!")  # error 53
-
-        self.store_to_variable(self.arguments["arg1"], {"value": symbol1["value"] > symbol2["value"], "type": "bool"})
-
-    def EQ(self):
+    def equal(self):
         symbol1 = self.load_symbol(self.arguments["arg2"])
         symbol2 = self.load_symbol(self.arguments["arg3"])
 
         if symbol1["type"] != "nil" and symbol2["type"] != "nil" and symbol1["type"] != symbol2["type"]:
             raise BadOperandTypeException("Incorrect Type of argument!")  # error 53
 
-        self.store_to_variable(self.arguments["arg1"], {"value": symbol1["value"] == symbol2["value"], "type": "bool"})
+        return symbol1["value"] == symbol2["value"]
 
-    def AND(self):
+    def EQ(self):
+        self.store_to_variable(self.arguments["arg1"], {"value": self.equal(), "type": "bool"})
+
+    def logic_operands(self):
         symbol1 = self.load_symbol(self.arguments["arg2"])
         symbol2 = self.load_symbol(self.arguments["arg3"])
 
         if symbol1["type"] != "bool" or symbol2["type"] != "bool":
             raise BadOperandTypeException("Incorrect Type of argument!")  # error 53
 
+        return self.arguments["arg1"], symbol1, symbol2
+
+    def AND(self):
+        variable, symbol1, symbol2 = self.logic_operands()
         self.store_to_variable(self.arguments["arg1"], {"value": symbol1["value"] and symbol2["value"], "type": "bool"})
 
     def OR(self):
-        symbol1 = self.load_symbol(self.arguments["arg2"])
-        symbol2 = self.load_symbol(self.arguments["arg3"])
-
-        if symbol1["type"] != "bool" or symbol2["type"] != "bool":
-            raise BadOperandTypeException("Incorrect 'type' of argument!")  # error 53
-
+        variable, symbol1, symbol2 = self.logic_operands()
         self.store_to_variable(self.arguments["arg1"], {"value": symbol1["value"] or symbol2["value"], "type": "bool"})
 
     def NOT(self):
@@ -242,17 +235,38 @@ class Instruction:
 
         self.store_to_variable(self.arguments["arg1"], {"value": not symbol1["value"], "type": "bool"})
 
+    def string_operands(self):
+        symbol1 = self.load_symbol(self.arguments["arg2"])
+        symbol2 = self.load_symbol(self.arguments["arg3"])
+        if symbol1["type"] != "string" or symbol2["type"] != "int":
+            raise BadOperandTypeException("Incorrect Type of argument!")  # error 53
+        if len(symbol1["value"]) <= symbol2["value"] or symbol2["value"] < 0:
+            raise InvalidStringOperationException("Bad indexing in string!")  # error 58
+        return self.arguments["arg1"], symbol1, symbol2
+
     def STRI2INT(self):
+        variable, symbol1, symbol2 = self.string_operands()
+        self.store_to_variable(variable, {"value": ord(symbol1["value"][symbol2["value"]]), "type": "int"})
+
+    def GETCHAR(self):
+        variable, symbol1, symbol2 = self.string_operands()
+        self.store_to_variable(variable, {"value": symbol1["value"][symbol2["value"]], "type": "string"})
+
+    def SETCHAR(self):
+        var = self.load_symbol(self.arguments["arg1"])
         symbol1 = self.load_symbol(self.arguments["arg2"])
         symbol2 = self.load_symbol(self.arguments["arg3"])
 
-        if symbol1["type"] != "string" or symbol2["type"] != "int":
+        if var["type"] != "string" or symbol1["type"] != "int" or symbol2["type"] != "string":
             raise BadOperandTypeException("Incorrect Type of argument!")  # error 53
 
-        if len(symbol1["value"]) <= symbol2["value"] or symbol2["value"] < 0:
+        if len(var["value"]) <= symbol1["value"] or len(symbol2["value"]) == 0 or symbol1["value"] < 0:
             raise InvalidStringOperationException("Bad indexing in string!")  # error 58
 
-        self.store_to_variable(self.arguments["arg1"], {"value": ord(symbol1["value"][symbol2["value"]]), "type": "int"})
+        new = list(var["value"])
+        new[symbol1["value"]] = symbol2["value"][0]
+
+        self.store_to_variable(self.arguments["arg1"], {"value": ''.join(new), "type": "string"})
 
     def READ(self):
         type_t = self.arguments["arg2"]
@@ -284,47 +298,15 @@ class Instruction:
     def CONCAT(self):
         symbol1 = self.load_symbol(self.arguments["arg2"])
         symbol2 = self.load_symbol(self.arguments["arg3"])
-
         if symbol1["type"] != "string" or symbol2["type"] != "string":
             raise BadOperandTypeException("Incorrect Type of argument!")  # error 53
-
         self.store_to_variable(self.arguments["arg1"], {"value": symbol1["value"] + symbol2["value"], "type": "string"})
 
     def STRLEN(self):
         symbol1 = self.load_symbol(self.arguments["arg2"])
-
         if symbol1["type"] != "string":
             raise BadOperandTypeException("Incorrect Type of argument!")  # error 53
-
         self.store_to_variable(self.arguments["arg1"], {"value": len(symbol1["value"]), "type": "int"})
-
-    def GETCHAR(self):
-        symbol1 = self.load_symbol(self.arguments["arg2"])
-        symbol2 = self.load_symbol(self.arguments["arg3"])
-
-        if symbol1["type"] != "string" or symbol2["type"] != "int":
-            raise BadOperandTypeException("Incorrect Type of argument!")  # error 53
-
-        if len(symbol1["value"]) <= symbol2["value"] or symbol2["value"] < 0:
-            raise InvalidStringOperationException("Bad indexing in string!")  # error 58
-
-        self.store_to_variable(self.arguments["arg1"], {"value": symbol1["value"][symbol2["value"]], "type": "string"})
-
-    def SETCHAR(self):
-        var = self.load_symbol(self.arguments["arg1"])
-        symbol1 = self.load_symbol(self.arguments["arg2"])
-        symbol2 = self.load_symbol(self.arguments["arg3"])
-
-        if var["type"] != "string" or symbol1["type"] != "int" or symbol2["type"] != "string":
-            raise BadOperandTypeException("Incorrect Type of argument!")  # error 53
-
-        if len(var["value"]) <= symbol1["value"] or len(symbol2["value"]) == 0 or symbol1["value"] < 0:
-            raise InvalidStringOperationException("Bad indexing in string!")  # error 58
-
-        new = list(var["value"])
-        new[symbol1["value"]] = symbol2["value"][0]
-
-        self.store_to_variable(self.arguments["arg1"], {"value": ''.join(new), "type": "string"})
 
     def TYPE(self):
         symbol1 = self.arguments["arg2"]
@@ -348,47 +330,30 @@ class Instruction:
     def LABEL(self):
         pass
 
-    def JUMP(self):
+    def check_label(self):
         label = self.arguments["arg1"]
         if label.content not in self.program.labels:
             raise InvalidCodeException("Undefined label: '" + label.content + "'!")  # error 52
+        return label
 
+    def JUMP(self):
+        label = self.check_label()
         self.program.instruction_pointer = self.program.labels[label.content]
 
     def JUMPIFEQ(self):
-        label = self.arguments["arg1"]
-        symbol1 = self.load_symbol(self.arguments["arg2"])
-        symbol2 = self.load_symbol(self.arguments["arg3"])
-
-        if symbol1["type"] != "nil" and symbol2["type"] != "nil" and symbol1["type"] != symbol2["type"]:
-            raise BadOperandTypeException("Incorrect Type of argument!")  # error 53
-
-        if label.content not in self.program.labels:
-            raise InvalidCodeException("Undefined label: '" + label.content + "'!")  # error 52
-
-        if symbol1["value"] == symbol2["value"]:
+        label = self.check_label()
+        if self.equal():
             self.program.instruction_pointer = self.program.labels[label.content]
 
     def JUMPIFNEQ(self):
-        label = self.arguments["arg1"]
-        symbol1 = self.load_symbol(self.arguments["arg2"])
-        symbol2 = self.load_symbol(self.arguments["arg3"])
-
-        if symbol1["type"] != "nil" and symbol2["type"] != "nil" and symbol1["type"] != symbol2["type"]:
-            raise BadOperandTypeException("Incorrect Type of argument!")  # error 53
-
-        if label.content not in self.program.labels:
-            raise InvalidCodeException("Undefined label: '" + label.content + "'!")  # error 52
-
-        if symbol1["value"] != symbol2["value"]:
+        label = self.check_label()
+        if not self.equal():
             self.program.instruction_pointer = self.program.labels[label.content]
 
     def EXIT(self):
         symbol = self.load_symbol(self.arguments["arg1"])
-
         if symbol["type"] != "int":
             raise BadOperandTypeException("Incorrect Type of argument!")  # error 53
-
         if symbol["value"] < 0 or symbol["value"] > 49:
             raise BadValueException("Invalid exit value!")  # error 57
         sys.exit(symbol["value"])
@@ -406,6 +371,3 @@ class Instruction:
 
     def BREAK(self):
         print(self.program.__repr__(), file=sys.stderr)
-
-
-

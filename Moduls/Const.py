@@ -52,10 +52,13 @@ TYPES = {
     'type': 'TypeT'
 }
 
-__STRING = r'(([^\s\\#]|\\\d{3})+|$)'
-__INT = r"(\+|\-)?\d+"
-__BOOL = r"(true|false)"
-__NIL = r"nil"
+# TODO: help
+HELP = """Help will be here!"""
+
+__STRING = r'string@(([^\s\\#]|\\\d{3})+|$)'
+__INT = r"int@(\+|\-)?\d+"
+__BOOL = r"bool@(true|false)"
+__NIL = r"nil@nil"
 __SPECIAL_CHAR = r"_$&%*!?-"
 IDENTIFIER = r'[A-Ža-ž' + __SPECIAL_CHAR + r'][\w' + __SPECIAL_CHAR + r']*'
 TYPE_REGEX = re.compile(r'^(int|bool|string)$')
@@ -64,5 +67,8 @@ VARIABLE_REGEX = re.compile(r"^((GF|LF|TF)@" + IDENTIFIER + r")$")
 COMPILED_IDENTIFIER_REGEX = re.compile(r"^(" + IDENTIFIER + r")$")
 
 INVALID_XML_ERROR = 31
+FILE_DONT_EXIST_ERROR = 11
+MISSING_ARGUMENT = 10
+
 ERROR_OK = 0
 

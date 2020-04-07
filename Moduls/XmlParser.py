@@ -11,9 +11,10 @@ import sys
 
 
 class XmlParser:
-    def __init__(self, parse_file, program):
+    def __init__(self, parse_file, program, stats):
         self.__parse_file = parse_file
         self.__program = program
+        self.__stats = stats
         self.__instructions = []
 
     def parse(self):
@@ -30,7 +31,7 @@ class XmlParser:
             self.__check_argument_element(argument)
             func = self.__get_and_check_type(argument.attrib["type"])
             args[argument.tag] = eval(func)(argument.text, argument.attrib["type"])
-        self.__instructions.append(Instruction(self.__program, int(element.attrib["order"]), element.attrib["opcode"].upper(), args))
+        self.__instructions.append(Instruction(self.__program, self.__stats, int(element.attrib["order"]), element.attrib["opcode"].upper(), args))
 
     def __check_program_element(self, element):
         self.__is_program(element)
