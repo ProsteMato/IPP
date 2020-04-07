@@ -22,6 +22,8 @@ class Instruction:
 
     def check_arguments(self):
         required_argument_type = INSTRUCTIONS.setdefault(self.op_code, [])
+        if len(required_argument_type) != len(self.arguments):
+            raise InvalidXmlException("More operands than needed!")
         for index, type in enumerate(required_argument_type):
             argument_name = "arg" + str(index + 1)
             if argument_name not in self.arguments:
