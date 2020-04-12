@@ -9,7 +9,12 @@ class Constant(Symbol):
     def __init__(self, content, type_t):
         if content is None:
             content = ""
-        if not Const.CONST_REGEX.match(type_t + "@" + content):
+        if type_t == "float":
+            try:
+                self.content = float.fromhex(content)
+            except ValueError:
+                raise InvalidXmlException("Invalid 'value' of constant: " + type_t + "@" + content)
+        elif not Const.CONST_REGEX.match(type_t + "@" + content):
             raise InvalidXmlException("Invalid 'value' of constant: " + type_t + "@" + content)
         if type_t == "bool":
             self.content = content == "true"

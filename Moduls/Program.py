@@ -23,8 +23,8 @@ class Program:
                 self.labels[instruction.arguments["arg1"].content] = idx
 
         while self.instruction_pointer < len(instructions):
-            instructions[self.instruction_pointer].execute()
             self.stats.inc_instructions()
+            instructions[self.instruction_pointer].execute()
             self.instruction_pointer += 1
 
     def __repr__(self):

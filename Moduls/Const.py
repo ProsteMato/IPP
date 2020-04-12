@@ -14,18 +14,37 @@ INSTRUCTIONS = {
     "RETURN": [],
     "PUSHS": [Symbol],
     "POPS": [Variable],
+    "CLEARS": [],
     "ADD": [Variable, Symbol, Symbol],
+    "ADDS": [],
     "SUB": [Variable, Symbol, Symbol],
+    "SUBS": [],
     "MUL": [Variable, Symbol, Symbol],
+    "MULS": [],
     "IDIV": [Variable, Symbol, Symbol],
+    "IDIVS": [],
+    "DIV": [Variable, Symbol, Symbol],
+    "DIVS": [],
     "LT": [Variable, Symbol, Symbol],
+    "LTS": [],
     "GT": [Variable, Symbol, Symbol],
+    "GTS": [],
     "EQ": [Variable, Symbol, Symbol],
+    "EQS": [],
     "AND": [Variable, Symbol, Symbol],
+    "ANDS": [],
     "OR": [Variable, Symbol, Symbol],
+    "ORS": [],
     "NOT": [Variable, Symbol],
+    "NOTS": [],
+    "FLOAT2INT": [Variable, Symbol],
+    "FLOAT2INTS": [],
+    "INT2FLOAT": [Variable, Symbol],
+    "INT2FLOATS": [],
     "INT2CHAR": [Variable, Symbol],
+    "INT2CHARS": [],
     "STRI2INT": [Variable, Symbol, Symbol],
+    "STRI2INTS": [],
     "READ": [Variable, TypeT],
     "WRITE": [Symbol],
     "CONCAT": [Variable, Symbol, Symbol],
@@ -36,7 +55,9 @@ INSTRUCTIONS = {
     "LABEL": [Label],
     "JUMP": [Label],
     "JUMPIFEQ": [Label, Symbol, Symbol],
+    "JUMPIFEQS": [Label],
     "JUMPIFNEQ": [Label, Symbol, Symbol],
+    "JUMPIFNEQS": [Label],
     "EXIT": [Symbol],
     "DPRINT": [Symbol],
     "BREAK": []
@@ -46,6 +67,7 @@ TYPES = {
     'int': 'Constant',
     'string': 'Constant',
     'bool': 'Constant',
+    'float': 'Constant',
     'label': 'Label',
     'var': 'Variable',
     'nil': 'Constant',
@@ -61,7 +83,7 @@ __BOOL = r"bool@(true|false)"
 __NIL = r"nil@nil"
 __SPECIAL_CHAR = r"_$&%*!?-"
 IDENTIFIER = r'[A-Ža-ž' + __SPECIAL_CHAR + r'][\w' + __SPECIAL_CHAR + r']*'
-TYPE_REGEX = re.compile(r'^(int|bool|string)$')
+TYPE_REGEX = re.compile(r'^(int|bool|string|float)$')
 CONST_REGEX = re.compile(r"^(" + __STRING + r"|" + __INT + r"|" + __BOOL + r"|" + __NIL + r")$")
 VARIABLE_REGEX = re.compile(r"^((GF|LF|TF)@" + IDENTIFIER + r")$")
 COMPILED_IDENTIFIER_REGEX = re.compile(r"^(" + IDENTIFIER + r")$")
