@@ -1,56 +1,41 @@
+"""
+@file: Stats.py
+@data: 13.4.2020
+@author: Martin Koči <xkocim05@stud.fit.vutbr.cz>
+
+This file is for storing statistics about interpretation.
+"""
+
 import sys
 from .exceptions import WritePermissionError
 
-class Stats:
 
+class Stats:
+    """ This class is storing all data about interpretation and writing them to the file """
     def __init__(self, file):
         self.instructions = 0
-        self.variables_GF = {}
-        self.variables_LF = {}
-        self.variables_TF = {}
+        self.maximum_vars = 0
         self.file = file
 
-    def add_variable_gf(self, var):
-        self.variables_GF[var] = False
-
-    def add_variable_lf(self, var):
-        self.variables_LF[var] = False
-
-    def add_variable_tf(self, var):
-        self.variables_TF[var] = False
-
-    def initialized_variable_gf(self, var):
-        self.variables_GF[var] = True
-
-    def initialized_variable_lf(self, var):
-        self.variables_LF[var] = True
-
-    def initialized_variable_tf(self, var):
-        self.variables_TF[var] = True
-
-    def count_initialized(self):
-        count = 0
-        for variable in self.variables_GF:
-            if self.variables_GF[variable]:
-                count += 1
-        for variable1 in self.variables_LF:
-            if self.variables_LF[variable1]:
-                count += 1
-        for variable2 in self.variables_TF:
-            if self.variables_TF[variable2]:
-                count += 1
-        return count
+    def maximum_count(self, count):
+        """ @param count: this is current count of initialized variables in all frames
+            This function is checking if count is new maximum or not.
+        """
+        self.maximum_vars = max(count, self.maximum_vars)
 
     def inc_instructions(self):
+        """ This function is incrementing how much instructions were executed """
         self.instructions += 1
 
     def write_stats(self):
+        """This function is writing stats to the file"""
         try:
-            with open(self.file, "w") as file:
-                for arg in sys.argv:
-                    if arg == "--insts":
-                        file.write(str(self.instructions) + "\n")
-                    elif arg == "--vars":
-                        file.write(str(self.count_initialized()) + "\n")
+            if self.file is not None:
+                with open(self.file, "w") as file:
+                    for arg in sys.argv:
+                        if arg == "--insts":
+                            file.write(str(self.instructions) + "\n")
+                        elif arg == "--vars":
+                            file.write(str(self.maximum_vars) + "\n")
         except PermissionError:
             raise WritePermissionError("Missing write permission!")

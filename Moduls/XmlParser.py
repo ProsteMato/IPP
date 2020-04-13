@@ -1,3 +1,11 @@
+"""
+@file: XmlParser.py
+@data: 13.4.2020
+@author: Martin Koči <xkocim05@stud.fit.vutbr.cz>
+
+This file is for parsing program from XML representation and checking it.
+"""
+
 import xml.etree.ElementTree as elementTree
 import Moduls.Const as Const
 from .Instruction import Instruction
@@ -11,6 +19,7 @@ import sys
 
 
 class XmlParser:
+    """This class is for parsing program from XML representation and checking correction"""
     def __init__(self, parse_file, program, stats):
         self.__parse_file = parse_file
         self.__program = program
@@ -18,6 +27,10 @@ class XmlParser:
         self.__instructions = []
 
     def parse(self):
+        """
+        When this function is called, Parsing is started and it returns instructions sorted be order
+        @return: sorted instructions
+        """
         element = elementTree.parse(self.__parse_file).getroot()
         self.__check_program_element(element)
         for element in element:

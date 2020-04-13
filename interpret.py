@@ -1,3 +1,11 @@
+"""
+@file: interpret.py
+@data: 13.4.2020
+@author: Martin Koči <xkocim05@stud.fit.vutbr.cz>
+
+This file is for interpreting the program and for injecting all features together.
+"""
+
 from Moduls.XmlParser import XmlParser
 import Moduls.Const as Const
 from Moduls.Program import Program
