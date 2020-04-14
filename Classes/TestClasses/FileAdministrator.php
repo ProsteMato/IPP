@@ -55,7 +55,12 @@ class FileAdministrator
             $this->getTestCasesFromIterator($currentDirIter);
         }
         $this->createTestSuite();
+        uksort($this->testSuites, array($this, "compare"));
         return $this->testSuites;
+    }
+
+    private function compare($s1, $s2) {
+        return strcmp($s1, $s2);
     }
 
     private function getTestCasesFromIterator($currentDirIter) {
@@ -105,10 +110,15 @@ class FileAdministrator
 
     private function createTestCases($testCaseNames) : array {
         $testsCases = array();
+        usort($testCaseNames, array($this, "compareTestCases"));
         foreach ($testCaseNames as $testCaseName)
         {
             $testsCases[$testCaseName] = new TestCase($testCaseName);
         }
         return $testsCases;
+    }
+
+    private function compareTestCases($t1, $t2) {
+        return strcmp($t1, $t2);
     }
 }

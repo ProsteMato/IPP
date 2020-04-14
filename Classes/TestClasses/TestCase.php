@@ -63,6 +63,14 @@ class TestCase
     }
 
     /**
+     * @return string
+     * @brief method returns base filename
+     */
+    public function getFilename(){
+        return $this->fileName;
+    }
+
+    /**
      * @return bool if test passed or not
      */
     public function hasPassed() : bool
